@@ -1,0 +1,310 @@
+/* Sakura Spotlight CSS Stylesheet */
+body.sakura-body {
+  background-color: #0b0709 !important;
+  color: #ffffff;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+body.sakura-body::-webkit-scrollbar {
+  display: none;
+}
+
+.sakura-stage {
+  position: relative;
+  width: 100%;
+  min-height: 850px;
+  height: 100vh;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 40%, #2a0e14 0%, #0b0709 80%);
+}
+
+/* Nav Link Customization */
+.sakura-nav {
+  position: relative;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 2.5rem;
+  background: rgba(11, 7, 9, 0.6);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(248, 112, 96, 0.2);
+}
+
+.sakura-nav .logo a {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #f87060;
+  text-decoration: none;
+  letter-spacing: 0.08em;
+}
+
+.sakura-nav .nav-links {
+  display: flex;
+  gap: 1.75rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sakura-nav .nav-item {
+  color: #f87060;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.sakura-nav .nav-item:hover {
+  color: #F9BCC3;
+  text-shadow: 0 0 8px #f87060;
+}
+
+/* Background Ellipse Glow */
+.ellipse {
+  position: absolute;
+  top: -80px;
+  left: 0;
+  width: 100vw;
+  height: 140vh;
+  object-fit: cover;
+  z-index: 1;
+  pointer-events: none;
+  transform: scale(0.3);
+  animation: ellipse-grow 2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+@keyframes ellipse-grow {
+  from {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+}
+
+/* Sakura Layered Images */
+.sakura-1 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  width: 550px;
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 0 20px rgba(248, 112, 96, 0.3));
+}
+
+/* Single Sakura Spotlight Rare Card */
+.sakura-2 {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  width: 380px;
+  max-width: 90vw;
+  height: 600px;
+  pointer-events: auto;
+  cursor: pointer;
+  animation: drag 2s cubic-bezier(0.16, 1, 0.3, 1) 1;
+  filter: drop-shadow(0 20px 50px rgba(248, 112, 96, 0.6));
+  transition: transform 0.3s ease, filter 0.3s ease;
+  border-radius: 24px;
+}
+
+.sakura-2:hover {
+  transform: translateX(-50%) scale(1.05);
+  filter: drop-shadow(0 25px 60px rgba(248, 112, 96, 0.8));
+}
+
+@keyframes drag {
+  from {
+    top: -120%;
+  }
+  to {
+    top: 60px;
+  }
+}
+
+.sakura-3 {
+  position: absolute;
+  top: 35%;
+  left: 60%;
+  z-index: 2;
+  width: 550px;
+  height: auto;
+  pointer-events: none;
+  animation: sakura3 3s ease 1;
+  filter: drop-shadow(0 0 25px rgba(249, 188, 195, 0.4));
+}
+
+@keyframes sakura3 {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Text Stack Typography */
+.text-stack {
+  position: absolute;
+  top: 180px;
+  left: 0;
+  width: 100%;
+  z-index: 10;
+  pointer-events: none;
+  animation: textAnim 2s cubic-bezier(0.16, 1, 0.3, 1) 1;
+}
+
+@keyframes textAnim {
+  from {
+    top: 500px;
+    opacity: 0;
+  }
+  to {
+    top: 180px;
+    opacity: 1;
+  }
+}
+
+.text,
+.text-transparent {
+  font-size: 9.5rem;
+  font-weight: 900;
+  text-align: center;
+  width: 100%;
+  margin: 0;
+  line-height: 1;
+  position: absolute;
+  left: 0;
+  letter-spacing: 0.15em;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.text {
+  color: #F9BCC3;
+  z-index: 1;
+  top: 0;
+  text-shadow: 0 0 20px #f87060, 0 0 40px rgba(248, 112, 96, 0.6);
+}
+
+.text-transparent {
+  color: transparent;
+  -webkit-text-stroke: 2px #f87060;
+  z-index: 6;
+  top: 0;
+}
+
+.text-surname {
+  font-size: 2.8rem;
+  font-weight: 900;
+  width: 100%;
+  line-height: 1;
+  color: #F9BCC3;
+  z-index: 20;
+  position: absolute;
+  letter-spacing: 0.35em;
+  top: 360px;
+  left: 0;
+  text-align: center;
+  text-shadow: 0 0 15px #F9BCC3;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Side Card Container */
+.side {
+  position: absolute;
+  top: 85px;
+  right: 4%;
+  z-index: 30;
+  width: 320px;
+}
+
+.rectangle {
+  position: relative;
+  width: 100%;
+  padding: 1.25rem;
+  background: rgba(30, 10, 15, 0.75);
+  border: 1px solid rgba(248, 112, 96, 0.5);
+  border-radius: 20px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 20px rgba(248, 112, 96, 0.2);
+  animation: side 2s cubic-bezier(0.16, 1, 0.3, 1) 1;
+}
+
+@keyframes side {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.sidehead {
+  font-size: 0.9rem;
+  color: #F9BCC3;
+  font-weight: 900;
+  text-align: left;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 8px rgba(249, 188, 195, 0.5);
+  animation: sidehead 2.5s ease 1;
+}
+
+@keyframes sidehead {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sidedescribe {
+  font-size: 0.75rem;
+  color: #e2e8f0;
+  text-align: left;
+  line-height: 1.5;
+  margin: 0;
+  font-weight: 500;
+  animation: sidedescribe 2.5s ease 1;
+}
+
+@keyframes sidedescribe {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Central Group Image Container */
+.Group {
+  position: absolute;
+  top: 360px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  cursor: grab;
+  transition: all 0.3s ease;
+  max-width: 380px;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.7));
+}
+
+.Group:hover {
+  transform: translateX(-50%) scale(1.04);
+}

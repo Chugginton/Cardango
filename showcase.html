@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CARDANGO - Rare Card History & Timeline</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="story.css" />
+</head>
+
+<body class="card-story-body">
+
+  <!-- UNIFIED LIGHT NAVBAR (LOGO ON RIGHT SIDE) -->
+  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-sky-200 shadow-sm">
+    <div class="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-6">
+      
+      <!-- Navigation Links -->
+      <nav class="hidden md:flex items-center gap-6 text-xs font-bold text-slate-600">
+        <a href="index.html" class="hover:text-sky-600 transition-colors py-1">Home Dashboard</a>
+        <a href="marketplace.html" class="hover:text-sky-600 transition-colors py-1">Marketplace Catalog</a>
+        <a href="showcase.html" class="text-sky-600 border-b-2 border-sky-600 py-1 flex items-center gap-1 font-extrabold">
+          <span>Rare Card History</span>
+          <span class="px-1.5 py-0.5 text-[9px] bg-sky-600 text-white font-black rounded uppercase">Timeline</span>
+        </a>
+        <a href="trade.html" class="hover:text-sky-600 transition-colors py-1">P2P Trade</a>
+        <a href="collection.html" class="hover:text-sky-600 transition-colors py-1 flex items-center gap-1.5">
+          <span>Your Collection</span>
+          <span id="collectionNavBadge" class="hidden px-1.5 py-0.2 bg-amber-500 text-white text-[10px] font-black rounded-full">0</span>
+        </a>
+      </nav>
+
+      <!-- Right Side Group: Cart Drawer + CARDANGO Logo on Far Right -->
+      <div class="flex items-center gap-4 ml-auto">
+        <button onclick="openCartDrawer()" class="relative p-2 text-slate-600 hover:text-sky-600 transition-colors" title="View Cart">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+          <span id="cartBadgeCount" class="hidden absolute top-1 right-1 w-4 h-4 bg-sky-600 text-white text-[10px] font-black rounded-full flex items-center justify-center">0</span>
+        </button>
+
+        <a href="index.html" class="flex items-center gap-2 flex-shrink-0">
+          <span class="font-extrabold text-lg text-slate-900 tracking-tight">CARD<span class="text-sky-600">ANGO</span></span>
+          <img src="https://i.pinimg.com/1200x/da/6f/2c/da6f2c6782704e4120fc689f5da89482.jpg" alt="CARDANGO Logo" class="w-8 h-8 rounded-full object-cover shadow-sm border border-sky-400" />
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- TIMELINE CONTAINER -->
+  <main class="card-story-container">
+    
+    <!-- HEADER HERO BANNER BOX -->
+    <div class="story-header-box story-anim-item">
+      <span class="story-header-badge">#CARDANGO • CHRONICLES OF SLAB #004</span>
+      <h1 class="story-header-title">The Legendary Origin & History</h1>
+      <p class="story-header-desc">
+        Trace the complete 27-year journey of this rare card—from its raw 1999 factory printing press origin, through sealed vault preservation, to its crowned BGS Gem Mint destination.
+      </p>
+    </div>
+
+    <!-- VERTICAL TIMELINE STAGE -->
+    <div class="card-story-timeline">
+
+      <!-- CHAPTER 1: 1999 MINT ORIGIN -->
+      <div class="story-chapter">
+        <div class="story-card-box story-card-left story-anim-item">
+          <div class="story-year-tag">1999</div>
+          <h2 class="story-chapter-title">Chapter I: The Base Set Printing Press</h2>
+          <p class="story-chapter-desc">
+            Printed in the first initial run of 1999. Selected from a fresh uncirculated sheet with flawless shadowless foil alignment and vivid chromatic pigment depth.
+          </p>
+          <div class="story-img-frame">
+            <img src="https://i.pinimg.com/736x/42/e3/1a/42e31a89a861c1bf09dd484ceb6babac.jpg" alt="1999 Factory Printing Origin">
+          </div>
+          <div class="story-grid-images">
+            <div class="mini-frame">
+              <img src="https://i.pinimg.com/736x/12/ce/23/12ce236055ea444ce30780afda629a5d.jpg" alt="Raw Pack Art">
+            </div>
+            <div class="mini-frame">
+              <img src="https://i.pinimg.com/736x/49/41/8d/49418d6198c0ead91eb561b62d936ee0.jpg" alt="Uncut Foil Sheet">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHAPTER 2: 2008 PRIVATE VAULT PRESERVATION -->
+      <div class="story-chapter">
+        <div class="story-card-box story-card-right story-anim-item">
+          <div class="story-year-tag">2008</div>
+          <h2 class="story-chapter-title">Chapter II: Sealed Vault Preservation</h2>
+          <p class="story-chapter-desc">
+            Acquired by an elite private collector and stored in a UV-shielded, climate-controlled vault drawer. Kept untouched for over a decade in pristine mint state.
+          </p>
+          <div class="story-img-frame">
+            <img src="https://i.pinimg.com/1200x/60/18/39/6018396436f97c3de5ae3f9a9ff44f08.jpg" alt="Sealed Vault Protective Sleeving">
+          </div>
+        </div>
+      </div>
+
+      <!-- CHAPTER 3: 2018 AUTHENTICATION & BGS 9.5 GRADING -->
+      <div class="story-chapter">
+        <div class="story-card-box story-card-left story-anim-item">
+          <div class="story-year-tag">2018</div>
+          <h2 class="story-chapter-title">Chapter III: Professional BGS 9.5 Authentication</h2>
+          <p class="story-chapter-desc">
+            Submitted to Beckett Grading Services. Achieved subgrades: Centering 10, Surface 9.5, Edges 9.5, Corners 9.5, encased in sonic-welded acrylic slab protection.
+          </p>
+          <div class="story-img-frame">
+            <img src="https://i.pinimg.com/736x/35/1f/c5/351fc51d72cd1b4528c95125d1b90ea1.jpg" alt="Laser Subgrade Magnification Inspection">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- FINAL DESTINATION: THE CROWNED SPOTLIGHT SLAB AT END OF STORY -->
+    <div class="story-final-destination story-anim-item">
+      <div class="final-slab-crown-badge">
+        <span>👑</span>
+        <span>FINAL DESTINATION • SPOTLIGHT SLAB</span>
+      </div>
+
+      <h2 class="final-slab-title">1999 Base Set 1st Edition Charizard Holo #004</h2>
+      <p class="final-slab-subtitle">
+        Graded BGS 9.5 Gem Mint with Centering score 10. The ultimate culmination of 27 years of preservation, now verified and available on CARDANGO.
+      </p>
+
+      <!-- THE SLAB IMAGE AT END OF STORY -->
+      <div class="final-slab-img-container">
+        <div class="final-slab-img-inner">
+          <img src="https://i.pinimg.com/1200x/8a/6f/20/8a6f2091122f67b8813a9849b742b60a.jpg" alt="Final Crowned Graded Card Slab" />
+        </div>
+      </div>
+
+      <div class="text-xl font-black text-white mb-4">
+        Est. Market Value: <span class="text-sky-400">₹2,86,350</span> <span class="text-xs text-slate-400">(1.25 ETH)</span>
+      </div>
+
+      <div class="final-slab-actions">
+        <button onclick="openTradeModal(2)" class="final-slab-btn-primary">
+          Propose Escrow Swap
+        </button>
+        <button onclick="addToCart(2)" class="final-slab-btn-secondary">
+          Buy Now (₹2,86,350)
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- CARDANGO LARGE FOOTER -->
+  <footer class="naruto-large-footer">
+    <div class="w-full px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-10 pb-16 border-b border-white/20">
+        <div class="md:col-span-4 space-y-4">
+          <div class="flex items-center gap-3">
+            <img src="https://i.pinimg.com/1200x/da/6f/2c/da6f2c6782704e4120fc689f5da89482.jpg" alt="CARDANGO Logo" class="w-10 h-10 rounded-full object-cover shadow-lg border border-amber-400" />
+            <span class="brand-logo-text text-white">CARDANGO</span>
+          </div>
+          <p class="brand-tagline">Building digital trading card experiences that inspire, connect, and preserve lasting value.</p>
+        </div>
+        <div class="md:col-span-2 space-y-3">
+          <div class="footer-heading">SHOP</div>
+          <ul class="space-y-2 text-xs">
+            <li><a href="marketplace.html">All Collections</a></li>
+            <li><a href="marketplace.html">Dev Cards</a></li>
+            <li><a href="marketplace.html">Pokémon Cards</a></li>
+            <li><a href="marketplace.html">Anime Cards</a></li>
+            <li><a href="marketplace.html">Cricket Cards</a></li>
+          </ul>
+        </div>
+        <div class="md:col-span-3 space-y-3">
+          <div class="footer-heading">ABOUT US</div>
+          <ul class="space-y-2 text-xs">
+            <li><a href="contact.html">Our Story</a></li>
+            <li><a href="trade.html">Authenticity Guarantee</a></li>
+            <li><a href="trade.html">CARDANGO Escrow Protection</a></li>
+          </ul>
+        </div>
+        <div class="md:col-span-3 space-y-3">
+          <div class="footer-heading">HELP & SUPPORT</div>
+          <ul class="space-y-2 text-xs">
+            <li><a href="contact.html">FAQs & Support</a></li>
+            <li><a href="contact.html">Free Card Appraisal</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="pt-8 flex flex-col md:flex-row items-center justify-between text-xs text-slate-300 font-serif italic gap-3">
+        <div>© 2026 CARDANGO. All rights reserved.</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- CART DRAWER MODAL -->
+  <div id="cartDrawerModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm items-center justify-end">
+    <div class="w-full max-w-sm bg-white h-full shadow-2xl flex flex-col justify-between p-4 border-l border-sky-200 text-slate-900">
+      <div>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <h3 class="text-sm font-bold text-slate-900">Your CARDANGO Cart</h3>
+          <button onclick="closeCartDrawer()" class="text-slate-400 hover:text-slate-900">✕</button>
+        </div>
+        <div id="cartDrawerItems" class="space-y-2 mt-3 max-h-[65vh] overflow-y-auto"></div>
+      </div>
+      <div class="pt-3 border-t border-slate-100">
+        <div class="flex justify-between items-center text-xs font-bold text-slate-900 mb-3">
+          <span>Total Est. Value:</span>
+          <span id="cartDrawerTotal" class="text-sm text-sky-600 font-black">₹0</span>
+        </div>
+        <button onclick="checkoutCart()" class="w-full py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl shadow-md">
+          Proceed to Escrow Checkout
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRADE MODAL -->
+  <div id="tradeModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm items-center justify-center p-4 text-slate-900">
+    <div class="w-full max-w-md bg-white rounded-2xl p-5 shadow-2xl space-y-4 border border-sky-100">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+        <h3 class="text-sm font-bold text-slate-900">CARDANGO Peer Trade</h3>
+        <button onclick="closeTradeModal()" class="text-slate-400 hover:text-slate-900">✕</button>
+      </div>
+      <div class="flex items-center gap-3 bg-sky-50 p-3 rounded-xl border border-sky-100">
+        <img id="tradeTargetImage" src="https://i.pinimg.com/1200x/8a/6f/20/8a6f2091122f67b8813a9849b742b60a.jpg" class="w-12 h-12 rounded-lg object-cover" />
+        <div>
+          <div class="text-[10px] text-sky-600 font-bold">TARGET CARD</div>
+          <div id="tradeTargetTitle" class="text-xs font-bold text-slate-900">1999 Base Set 1st Edition Charizard Holo #004</div>
+        </div>
+      </div>
+      <div class="space-y-2">
+        <label class="block text-[10px] font-bold text-slate-600 uppercase">Select Card to Swap:</label>
+        <select class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800">
+          <option>Senior Full-Stack Architect #01 (PSA 10)</option>
+          <option>Rust Kernel Hacker #08 (PSA 10)</option>
+        </select>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button onclick="closeTradeModal()" class="flex-1 py-2 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl">Cancel</button>
+        <button onclick="submitTradeOffer()" class="flex-1 py-2 bg-sky-600 text-white text-xs font-bold rounded-xl">Send Proposal</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+
+  <!-- INTERSECTION OBSERVER ANIMATION SCRIPT -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in-view');
+          }
+        });
+      }, { threshold: 0.1 });
+
+      document.querySelectorAll('.story-anim-item').forEach((el) => {
+        observer.observe(el);
+      });
+    });
+  </script>
+</body>
+</html>

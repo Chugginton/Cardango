@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CARDANGO - Card Detail Inspection</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-[#f0f9ff] text-slate-900 antialiased">
+
+  <!-- UNIFIED LIGHT NAVBAR (LOGO ON RIGHT SIDE) -->
+  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-sky-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-6">
+      
+      <!-- Navigation Links -->
+      <nav class="hidden md:flex items-center gap-6 text-xs font-bold text-slate-600">
+        <a href="index.html" class="hover:text-sky-600 transition-colors py-1">Home Dashboard</a>
+        <a href="marketplace.html" class="hover:text-sky-600 transition-colors py-1">Marketplace Catalog</a>
+        <a href="showcase.html" class="hover:text-sky-600 transition-colors py-1 flex items-center gap-1">
+          <span>Rare Card Spotlight</span>
+          <span class="px-1.5 py-0.5 text-[9px] bg-sky-600 text-white font-black rounded uppercase">Spotlight</span>
+        </a>
+        <a href="trade.html" class="hover:text-sky-600 transition-colors py-1">P2P Trade</a>
+        <a href="collection.html" class="hover:text-sky-600 transition-colors py-1 flex items-center gap-1.5">
+          <span>Your Collection</span>
+          <span id="collectionNavBadge" class="hidden px-1.5 py-0.2 bg-amber-500 text-white text-[10px] font-black rounded-full">0</span>
+        </a>
+      </nav>
+
+      <!-- Right Side Group: Cart Drawer + CARDANGO Logo on Far Right -->
+      <div class="flex items-center gap-4 ml-auto">
+        <button onclick="openCartDrawer()" class="relative p-2 text-slate-600 hover:text-sky-600 transition-colors" title="View Cart">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+          <span id="cartBadgeCount" class="hidden absolute top-1 right-1 w-4 h-4 bg-sky-600 text-white text-[10px] font-black rounded-full flex items-center justify-center">0</span>
+        </button>
+
+        <a href="index.html" class="flex items-center gap-2 flex-shrink-0">
+          <span class="font-extrabold text-lg text-slate-900 tracking-tight">CARD<span class="text-sky-600">ANGO</span></span>
+          <img src="https://i.pinimg.com/1200x/da/6f/2c/da6f2c6782704e4120fc689f5da89482.jpg" alt="CARDANGO Logo" class="w-8 h-8 rounded-full object-cover shadow-sm border border-sky-400" />
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- CARD DETAIL DYNAMIC CONTAINER -->
+  <section class="py-8 px-4">
+    <div id="cardDetailContainer" class="max-w-5xl mx-auto space-y-6">
+      <!-- Dynamically loaded by app.js -->
+    </div>
+  </section>
+
+  <!-- CARDANGO LARGE FOOTER -->
+  <footer class="naruto-large-footer">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-10 pb-16 border-b border-white/20">
+        <div class="md:col-span-4 space-y-4">
+          <div class="flex items-center gap-3">
+            <img src="https://i.pinimg.com/1200x/da/6f/2c/da6f2c6782704e4120fc689f5da89482.jpg" alt="CARDANGO Logo" class="w-10 h-10 rounded-full object-cover shadow-lg border border-amber-400" />
+            <span class="brand-logo-text text-white">CARDANGO</span>
+          </div>
+          <p class="brand-tagline">Building digital trading card experiences that inspire, connect, and preserve lasting value.</p>
+        </div>
+        <div class="md:col-span-2 space-y-3">
+          <div class="footer-heading">SHOP</div>
+          <ul class="space-y-2 text-xs">
+            <li><a href="marketplace.html">All Collections</a></li>
+            <li><a href="marketplace.html">Dev Cards</a></li>
+            <li><a href="marketplace.html">Pokémon Cards</a></li>
+            <li><a href="marketplace.html">Anime Cards</a></li>
+            <li><a href="marketplace.html">Cricket Cards</a></li>
+          </ul>
+        </div>
+        <div class="md:col-span-3 space-y-3">
+          <div class="footer-heading">ABOUT US</div>
+          <ul class="space-y-2 text-xs">
+            <li><a href="contact.html">Our Story</a></li>
+            <li><a href="trade.html">Authenticity Guarantee</a></li>
+            <li><a href="trade.html">CARDANGO Escrow Protection</a></li>
+          </ul>
+        </div>
+        <div class="md:col-span-3 space-y-3">
+          <div class="footer-heading">HELP & SUPPORT</div>
+          <ul class="space-y-2 text-xs">
+            <li><a href="contact.html">FAQs & Support</a></li>
+            <li><a href="contact.html">Free Card Appraisal</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="pt-8 flex flex-col md:flex-row items-center justify-between text-xs text-slate-300 font-serif italic gap-3">
+        <div>© 2026 CARDANGO. All rights reserved.</div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

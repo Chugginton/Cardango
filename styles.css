@@ -1,0 +1,469 @@
+/* CARDANGO Gabriel Beaugonin 3D Stack & Sky Blue Theme Styles */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Cinzel', Georgia, serif;
+  
+  --bg-sky-main: #f4f4f6;
+  --bg-sky-card: #ffffff;
+  --accent-sky: #0284c7;
+  --text-dark: #1a1a1a;
+  --text-muted: #8e8e93;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-sky-main);
+  color: var(--text-dark);
+  overflow-x: hidden;
+  margin: 0;
+}
+
+/* PURE TRADING CARD SLAB */
+.pure-card-slab {
+  aspect-ratio: 2.5 / 3.5;
+  
+  overflow: hidden;
+  position: relative;
+  background-color: #0284c7;
+  border: 4px solid #273034;
+  box-shadow: 0 12px 35px rgba(2, 132, 199, 0.25);
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.pure-card-slab:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 20px 45px rgba(2, 132, 199, 0.35);
+  border-color: black;
+}
+
+.pure-card-slab img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pure-card-slab .inspect-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 132, 199, 0.8);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 1rem;
+}
+
+.pure-card-slab:hover .inspect-overlay {
+  opacity: 1;
+}
+
+/* 3D VERTICAL STACK TRADE TERMINAL (CLEAN & SIMPLE CLASS NAMES) */
+.trade-container,
+.gbeaugonin-trade-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: calc(100vh - 120px);
+  padding: 2rem 4rem;
+  position: relative;
+  background-color: #f4f4f6;
+}
+
+/* Left Info Box */
+.trade-info,
+.gbeaugonin-left-info {
+  max-width: 480px;
+  z-index: 40;
+}
+
+.trade-info h1,
+.gbeaugonin-left-info h1 {
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.25rem;
+}
+
+.trade-info p.subtitle,
+.gbeaugonin-left-info p.subtitle {
+  font-size: 1.8rem;
+  color: #8e8e93;
+  font-weight: 500;
+  margin-bottom: 2.5rem;
+}
+
+.trade-action-buttons,
+.gbeaugonin-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.trade-btn,
+.gbeaugonin-btn {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 16px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1a1a1a;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s cubic-bezier(0.075, 0.82, 0.165, 1);
+  cursor: pointer;
+}
+
+.trade-btn:hover,
+.gbeaugonin-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* Right 3D Perspective Stack Slider */
+.trade-stack,
+.gbeaugonin-right-stack {
+  position: relative;
+  width: 350px;
+  height: 490px;
+  max-width: 85vw;
+  perspective: 1500px;
+  transform-style: preserve-3d;
+  user-select: none;
+}
+
+.trade-stack-card,
+.gbeaugonin-stack-item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 28px;
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.7s ease;
+  transform-style: preserve-3d;
+  transform-origin: center center;
+  will-change: transform, opacity;
+  cursor: pointer;
+}
+
+.trade-stack-card.pos-active,
+.gbeaugonin-stack-item.pos-active {
+  transform: translateY(0px) scale(1) rotateX(0deg);
+  opacity: 1;
+  z-index: 30;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.16);
+}
+
+.trade-stack-card.pos-prev,
+.gbeaugonin-stack-item.pos-prev {
+  transform: translateY(-280px) scale(0.82) rotateX(-98deg);
+  opacity: 0.7;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.trade-stack-card.pos-next,
+.gbeaugonin-stack-item.pos-next {
+  transform: translateY(280px) scale(0.82) rotateX(98deg);
+  opacity: 0.7;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.trade-stack-card.pos-hidden-top,
+.gbeaugonin-stack-item.pos-hidden-top {
+  transform: translateY(-380px) scale(0.65) rotateX(-110deg);
+  opacity: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.trade-stack-card.pos-hidden-bottom,
+.gbeaugonin-stack-item.pos-hidden-bottom {
+  transform: translateY(380px) scale(0.65) rotateX(110deg);
+  opacity: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* Full Trading Card Slab in 3D Stack (Uncut) */
+.trade-card-inner.full-slab-card,
+.gbeaugonin-card-inner.full-slab-card {
+  width: 100%;
+  height: 100%;
+  border-radius: 28px;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+  background: #ffffff;
+  border: 5px solid #ffffff;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(2, 132, 199, 0.2);
+}
+
+.trade-card-inner.full-slab-card img,
+.gbeaugonin-card-inner.full-slab-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.full-slab-overlay {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+}
+
+.full-slab-grade {
+  padding: 0.35rem 0.85rem;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  color: #38bdf8;
+  font-weight: 900;
+  font-size: 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.bg-pastel-yellow { background-color: #fef3c7; }
+.bg-pastel-sky { background-color: #e0f2fe; }
+.bg-pastel-purple { background-color: #f3e8ff; }
+.bg-pastel-mint { background-color: #dcfce7; }
+
+/* Right Side Vertical Pagination Dots */
+.trade-dots,
+.gbeaugonin-dots {
+  position: absolute;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  z-index: 50;
+}
+
+.trade-dot,
+.gbeaugonin-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #1a1a1a;
+  opacity: 0.2;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.trade-dot.active,
+.gbeaugonin-dot.active {
+  opacity: 1;
+  transform: scale(1.4);
+}
+
+/* 3D Horizontal Cylinder Carousel */
+.banner {
+  width: 100%;
+  height: 400px;
+  text-align: center;
+  overflow: hidden;
+  position: relative;
+  background: radial-gradient(circle at 50% 30%, rgba(56, 189, 248, 0.25) 0%, rgba(240, 249, 255, 0) 75%);
+ 
+  box-shadow: 0 10px 40px rgba(2, 132, 199, 0.1);
+}
+
+.banner .slider {
+  position: absolute;
+  width: 160px;
+  height: 224px;
+  top: 15%;
+  left: calc(50% - 80px);
+  transform-style: preserve-3d;
+  transform: perspective(1000px);
+  animation: autorun 22s linear infinite;
+  z-index: 2;
+}
+
+.banner .slider:hover {
+  animation-play-state: paused;
+}
+
+@keyframes autorun {
+  from {
+    transform: perspective(1000px) rotateX(-14deg) rotateY(0deg);
+  }
+  to {
+    transform: perspective(1000px) rotateX(-14deg) rotateY(360deg);
+  }
+}
+
+.banner .slider .item {
+  position: absolute;
+  inset: 0 0 0 0;
+  transform: rotateY(calc((var(--position) - 1) * (360 / var(--quantity)) * 1deg)) translateZ(380px);
+  
+  overflow: hidden;
+  box-shadow: 0 12px 35px rgba(2, 132, 199, 0.3);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.banner .slider .item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.banner .content {
+  position: absolute;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.banner .content h1 {
+  font-family: var(--font-sans);
+  font-size: 3.5rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: rgba(2, 132, 199, 0.2);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+/* CARDANGO LARGE FOOTER */
+.naruto-large-footer {
+  background-image: url('foot.jpg');
+  background-size: cover;
+  background-position: center 35% ;
+  background-repeat: no-repeat;
+  color: black;
+  font-family: var(--font-sans);
+  position: relative;
+  overflow: hidden;
+  padding-top: 5rem;
+  padding-bottom: 4rem;
+}
+
+.naruto-large-footer .footer-heading {
+  font-family: var(--font-serif);
+  letter-spacing: 0.14em;
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: rgb(55, 49, 49);
+  border-bottom: 2px solid rgba(56, 189, 248, 0.4);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.naruto-large-footer .brand-logo-text {
+  font-family: var(--font-serif);
+  font-size: 2.2rem;
+  letter-spacing: 0.08em;
+  font-weight: 900;
+  color: rgb(55, 49, 49);
+}
+
+.naruto-large-footer .brand-tagline {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: rgb(55, 49, 49);
+  line-height: 1.6;
+}
+
+.naruto-large-footer a {
+  color: rgb(55, 49, 49);
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.naruto-large-footer a:hover {
+  color: #38bdf8;
+  transform: translateX(3px);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f0f9ff;
+}
+::-webkit-scrollbar-thumb {
+  background: #bae6fd;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #0284c7;
+}
+
+/* Custom Price Range Slider */
+#priceRangeSlider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #e0f2fe;
+  height: 6px;
+  border-radius: 9999px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+#priceRangeSlider:hover {
+  background: #bae6fd;
+}
+
+#priceRangeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #0284c7;
+  cursor: pointer;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.45);
+  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+#priceRangeSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  background: #0369a1;
+  box-shadow: 0 3px 8px rgba(2, 132, 199, 0.6);
+}
+
+#priceRangeSlider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #0284c7;
+  cursor: pointer;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.45);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+#priceRangeSlider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  background: #0369a1;
+}

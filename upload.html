@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CARDANGO - Upload & Mint New Trading Card</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-[#f0f9ff] text-slate-900 antialiased min-h-screen flex flex-col justify-between">
+
+  <!-- UNIFIED LIGHT NAVBAR -->
+  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-sky-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-6">
+      
+      <!-- Navigation Links -->
+      <nav class="hidden md:flex items-center gap-6 text-xs font-bold text-slate-600">
+        <a href="index.html" class="hover:text-sky-600 transition-colors py-1">Home</a>
+        <a href="marketplace.html" class="hover:text-sky-600 transition-colors py-1">Catalog</a>
+        <a href="showcase.html" class="hover:text-sky-600 transition-colors py-1 flex items-center gap-1">
+          <span>Rare Card</span>
+        </a>
+        <a href="trade.html" class="hover:text-sky-600 transition-colors py-1">P2P Trade</a>
+        <a href="collection.html" class="hover:text-sky-600 transition-colors py-1 flex items-center gap-1">
+          <span>Your Collection</span>
+          <span id="collectionNavBadge" class="hidden px-1.5 py-0.2 bg-amber-500 text-white text-[10px] font-black rounded-full">0</span>
+        </a>
+      </nav>
+
+      <!-- Right Side Group: Cart Drawer + Logo -->
+      <div class="flex items-center gap-4 ml-auto">
+        <button onclick="openCartDrawer()" class="relative p-2 text-slate-600 hover:text-sky-600 transition-colors" title="View Cart">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+          <span id="cartBadgeCount" class="hidden absolute top-1 right-1 w-4 h-4 bg-sky-600 text-white text-[10px] font-black rounded-full flex items-center justify-center">0</span>
+        </button>
+
+        <a href="index.html" class="flex items-center gap-2 flex-shrink-0">
+          <span class="font-extrabold text-lg text-slate-900 tracking-tight">CARD<span class="text-sky-600">ANGO</span></span>
+          <img src="https://i.pinimg.com/1200x/da/6f/2c/da6f2c6782704e4120fc689f5da89482.jpg" alt="CARDANGO Logo" class="w-8 h-8 rounded-full object-cover shadow-sm border border-sky-400" />
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN UPLOAD DESK CONTENT -->
+  <main class="flex-1 py-10 px-4">
+    <div class="max-w-6xl mx-auto space-y-8">
+      
+      <!-- HERO HEADER -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-sky-200">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 bg-sky-100 text-sky-800 text-[11px] font-black rounded-full uppercase tracking-wider mb-2">
+            <span>⚡ CARDANGO Minting & Upload Studio</span>
+          </div>
+          <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Add New Trading Card</h1>
+          <p class="text-xs sm:text-sm text-slate-500 mt-1 max-w-xl">
+            Upload new trading cards to your PostgreSQL database and live marketplace catalog with instant 3D slab preview.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <a href="marketplace.html" class="px-4 py-2 bg-white text-slate-700 hover:bg-sky-50 font-bold text-xs rounded-xl border border-sky-200 shadow-sm transition-all flex items-center gap-1.5">
+            <span>Browse Catalog</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- 2-COLUMN STUDIO: FORM ON LEFT + LIVE 3D SLAB PREVIEW ON RIGHT -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- LEFT: UPLOAD FORM (8 cols) -->
+        <div class="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-sky-200 shadow-sm space-y-6">
+          
+          <form id="cardUploadForm" onsubmit="handleCardUpload(event)" class="space-y-5">
+            
+            <!-- 1. Card Title -->
+            <div>
+              <label class="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+                Card Title <span class="text-red-500">*</span>
+              </label>
+              <input type="text" id="inputTitle" required placeholder="e.g. Lionel Messi World Champion Gold Slab" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white shadow-sm transition-all" oninput="updateLivePreview()" />
+            </div>
+
+            <!-- 2. Category & Grade Row -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+                  Category <span class="text-red-500">*</span>
+                </label>
+                <select id="inputCategory" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white shadow-sm transition-all" onchange="updateLivePreview()">
+                  <option value="dev">💻 Dev Cards</option>
+                  <option value="pokemon">⚡ Pokémon Cards</option>
+                  <option value="anime">⛩️ Anime Cards</option>
+                  <option value="cricket">🏏 Cricket Cards</option>
+                  <option value="football" selected>⚽ Football Cards</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+                  Authentication Grade
+                </label>
+                <select id="inputGrade" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white shadow-sm transition-all" onchange="updateLivePreview()">
+                  <option value="PSA 10 Gem Mint" selected>PSA 10 Gem Mint</option>
+                  <option value="BGS 10 Pristine">BGS 10 Pristine</option>
+                  <option value="BGS 9.5 Gem Mint">BGS 9.5 Gem Mint</option>
+                  <option value="PSA 9 Mint">PSA 9 Mint</option>
+                  <option value="Ungraded Raw / Near Mint">Ungraded Raw / Near Mint</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 3. Price INR & Price ETH -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+                  Price in INR (₹) <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                  <span class="absolute left-3.5 top-3 text-slate-400 font-bold text-xs">₹</span>
+                  <input type="number" id="inputPriceInr" step="1" min="1" required placeholder="398400" class="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white shadow-sm transition-all" oninput="syncEthPrice(); updateLivePreview();" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+                  Price in ETH (Auto-calculated)
+                </label>
+                <div class="relative">
+                  <span class="absolute left-3.5 top-3 text-slate-400 font-bold text-xs">Ξ</span>
+                  <input type="number" id="inputPriceEth" step="0.0001" min="0" placeholder="1.7000" class="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white shadow-sm transition-all" oninput="updateLivePreview()" />
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Card Image: Upload File OR Enter URL -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-black uppercase tracking-wider text-slate-700">
+                  Card Image <span class="text-red-500">*</span>
+                </label>
+                <!-- Mode Switcher Tabs -->
+                <div class="inline-flex p-0.5 bg-slate-100 rounded-lg text-[11px] font-bold border border-slate-200">
+                  <button type="button" id="tabUploadFile" onclick="switchImageTab('file')" class="px-2.5 py-1 rounded-md bg-white text-sky-600 shadow-sm transition-all flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    <span>Upload File</span>
+                  </button>
+                  <button type="button" id="tabEnterUrl" onclick="switchImageTab('url')" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                    <span>Web URL</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Option A: File Upload / Drag & Drop Zone -->
+              <div id="imageFileSection" class="space-y-2">
+                <input type="file" id="inputImageFile" accept="image/*" class="hidden" onchange="handleImageFileSelected(event)" />
+                <div 
+                  id="imageDropZone" 
+                  onclick="document.getElementById('inputImageFile').click()"
+                  class="border-2 border-dashed border-sky-300 hover:border-sky-500 bg-sky-50/50 hover:bg-sky-50/80 rounded-2xl p-6 text-center cursor-pointer transition-all space-y-2 group"
+                >
+                  <div class="w-12 h-12 mx-auto rounded-2xl bg-white text-sky-600 shadow-sm border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                  </div>
+                  <div>
+                    <span class="text-xs font-black text-slate-800 hover:text-sky-600">Click to upload image</span>
+                    <span class="text-xs text-slate-500 font-medium"> or drag and drop</span>
+                  </div>
+                  <div class="text-[11px] text-slate-400 font-semibold">
+                    Supports PNG, JPG, JPEG, WEBP, or GIF
+                  </div>
+                </div>
+
+                <!-- Selected File Info Banner (Hidden initially) -->
+                <div id="fileInfoBanner" class="hidden p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between text-xs">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <img id="fileThumbnail" src="" class="w-9 h-9 rounded-lg object-cover border border-emerald-300 flex-shrink-0" />
+                    <div class="truncate">
+                      <div id="fileNameDisplay" class="font-bold text-emerald-900 truncate">image.png</div>
+                      <div id="fileSizeDisplay" class="text-[10px] text-emerald-600 font-semibold">0 KB</div>
+                    </div>
+                  </div>
+                  <button type="button" onclick="document.getElementById('inputImageFile').click()" class="text-[11px] font-bold text-sky-600 hover:underline flex-shrink-0 ml-2">
+                    Change Image
+                  </button>
+                </div>
+              </div>
+
+              <!-- Option B: Web Image URL Input -->
+              <div id="imageUrlSection" class="hidden space-y-2">
+                <input 
+                  type="text" 
+                  id="inputImageUrl" 
+                  placeholder="Paste image web link (e.g. https://images.unsplash.com/...)" 
+                  class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white shadow-sm transition-all" 
+                  oninput="handleUrlInput()" 
+                />
+
+                <!-- Preset Sample Images (Authentic Trading Cards) -->
+                <div class="flex flex-wrap gap-2 pt-1 items-center">
+                  <span class="text-[10px] font-bold text-slate-400 uppercase">Card Presets:</span>
+                  <button type="button" onclick="setPresetImage('uploads/card_1791720108934_dbyhqy.jpg', 'Ho-oh ex Ultra Rare Holo #260', 'pokemon')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 text-[11px] font-bold rounded-lg border border-amber-200 transition-colors">Ho-oh ⚡</button>
+                  <button type="button" onclick="setPresetImage('https://i.pinimg.com/736x/35/ca/32/35ca32abb63da8220873970a391d6876.jpg', 'Charizard 1st Edition Shadowless Holo #004', 'pokemon')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 text-[11px] font-bold rounded-lg border border-amber-200 transition-colors">Charizard 🔥</button>
+                  <button type="button" onclick="setPresetImage('https://i.pinimg.com/1200x/8a/6f/20/8a6f2091122f67b8813a9849b742b60a.jpg', 'Monkey D. Luffy Gear 5 Manga Secret #01', 'anime')" class="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-800 text-[11px] font-bold rounded-lg border border-purple-200 transition-colors">Luffy ⛩️</button>
+                  <button type="button" onclick="setPresetImage('https://i.pinimg.com/736x/da/6f/2c/da6f2c6782704e4120fc689f5da89482.jpg', 'Lionel Messi 2022 World Cup Golden Ball Refractor', 'football')" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-lg border border-emerald-200 transition-colors">Messi ⚽</button>
+                  <button type="button" onclick="setPresetImage('https://i.pinimg.com/736x/42/e3/1a/42e31a89a861c1bf09dd484ceb6babac.jpg', 'Sachin Tendulkar 1999 Century Relic Slab', 'cricket')" class="px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-800 text-[11px] font-bold rounded-lg border border-sky-200 transition-colors">Sachin 🏏</button>
+                  <button type="button" onclick="setPresetImage('https://i.pinimg.com/736x/a9/78/19/a97819aa814cf2614b9b8ce97a71248e.jpg', 'Senior Full-Stack Architect #01', 'dev')" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 text-[11px] font-bold rounded-lg border border-indigo-200 transition-colors">Dev 💻</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 5. Feature Switches (Carousel & Spotlight) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <label class="flex items-center gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 hover:border-sky-300 cursor-pointer transition-all">
+                <input type="checkbox" id="inputInCarousel" class="w-4 h-4 text-sky-600 rounded focus:ring-sky-500" onchange="updateLivePreview()" />
+                <div>
+                  <div class="text-xs font-bold text-slate-800">3D Orbit Carousel</div>
+                  <div class="text-[10px] text-slate-500">Include in spinning 3D cylinder</div>
+                </div>
+              </label>
+
+              <label class="flex items-center gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 hover:border-sky-300 cursor-pointer transition-all">
+                <input type="checkbox" id="inputIsSpotlight" class="w-4 h-4 text-sky-600 rounded focus:ring-sky-500" onchange="updateLivePreview()" />
+                <div>
+                  <div class="text-xs font-bold text-slate-800">Rare Spotlight</div>
+                  <div class="text-[10px] text-slate-500">Feature in auction reel showcase</div>
+                </div>
+              </label>
+            </div>
+
+            <!-- 6. Card Description -->
+            <div>
+              <label class="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+                Description & Centering Notes
+              </label>
+              <textarea id="inputDescription" rows="3" placeholder="Historic tournament commemorative gold refractor card in gem mint condition..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white shadow-sm transition-all" oninput="updateLivePreview()"></textarea>
+            </div>
+
+            <!-- 7. Action Buttons -->
+            <div class="pt-4 flex flex-col sm:flex-row gap-3">
+              <button type="submit" class="flex-1 py-3.5 px-6 bg-sky-600 hover:bg-sky-700 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span>Upload & Publish Card</span>
+              </button>
+
+              <button type="button" onclick="copySqlStatement()" class="py-3.5 px-5 bg-slate-900 hover:bg-slate-800 text-amber-300 font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                <span>Copy SQL</span>
+              </button>
+            </div>
+
+          </form>
+
+          <!-- 8. Live SQL Database Storage Panel -->
+          <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 text-white space-y-3 shadow-md mt-6">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-xs font-black uppercase text-amber-300 tracking-wider">SQL Database Storage</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button type="button" onclick="copySqlStatement()" class="px-2.5 py-1 bg-amber-400 hover:bg-amber-300 text-slate-950 text-[11px] font-bold rounded-lg transition-colors flex items-center gap-1 shadow-sm">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                  <span>Copy SQL</span>
+                </button>
+                <button type="button" onclick="downloadSqlFile()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-sky-300 text-[11px] font-bold rounded-lg transition-colors flex items-center gap-1 border border-slate-700">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                  <span>Download .SQL</span>
+                </button>
+              </div>
+            </div>
+            
+            <pre id="liveSqlCode" class="text-[11px] font-mono text-emerald-300 bg-slate-950 p-3.5 rounded-xl overflow-x-auto whitespace-pre-wrap max-h-36 leading-relaxed border border-slate-800 select-all font-semibold"></pre>
+            
+            <div class="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+              <span>Automatically saved to <strong class="text-white">schema.sql</strong> and PostgreSQL upon publishing.</span>
+              <span class="text-emerald-400 font-bold">✓ SQL Ready</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT: LIVE 3D SLAB PREVIEW (5 cols) -->
+        <div class="lg:col-span-5 space-y-4 sticky top-20">
+          
+          <div class="bg-white rounded-3xl p-6 border border-sky-200 shadow-sm space-y-4">
+            
+            <div class="flex items-center justify-between pb-3 border-b border-sky-100">
+              <span class="text-xs font-black uppercase tracking-wider text-slate-400">Live 3D Slab Preview</span>
+              <span id="previewStatusBadge" class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">Ready to Mint</span>
+            </div>
+
+            <!-- 3D Holographic Card Slab -->
+            <div class="holo-card-container mx-auto max-w-[280px]">
+              <div class="holo-card pure-card-slab rounded-2xl overflow-hidden shadow-xl border-2 border-sky-300" id="previewCardSlab">
+                <div class="holo-card-glare"></div>
+                <img id="previewImage" src="uploads/card_1791720108934_dbyhqy.jpg" alt="Card Preview" class="w-full h-[360px] object-cover" referrerpolicy="no-referrer" />
+                
+                <!-- Overlay Badges -->
+                <div class="absolute top-2 left-2 z-20 flex flex-col gap-1">
+                  <span id="previewCategoryBadge" class="px-2 py-0.5 text-[10px] font-black rounded bg-amber-100 text-amber-800 border border-amber-300 shadow-sm">
+                    Pokémon Card
+                  </span>
+                  <span id="previewGradeBadge" class="px-2 py-0.5 text-[10px] font-black bg-slate-900 text-amber-300 rounded shadow-sm">
+                    PSA 10 Gem Mint
+                  </span>
+                </div>
+
+                <div class="absolute bottom-2 right-2 z-20">
+                  <span id="previewCarouselTag" class="hidden px-2 py-0.5 text-[9px] font-black bg-sky-600 text-white rounded-full shadow-sm">
+                    3D Orbit
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Preview Card Metadata Details -->
+            <div class="pt-3 border-t border-slate-100 space-y-2">
+              <h3 id="previewTitle" class="font-black text-slate-900 text-base leading-tight">
+                Ho-oh ex Ultra Rare Holo #260
+              </h3>
+              <p id="previewDescription" class="text-xs text-slate-500 line-clamp-2">
+                Paradox Rift Special Illustration Rare Ho-oh ex in pristine gem mint condition with radiant rainbow holographic foil.
+              </p>
+              
+              <div class="flex items-baseline justify-between pt-2">
+                <div>
+                  <span class="text-[10px] text-slate-400 font-bold block uppercase">Estimated Valuation</span>
+                  <span id="previewPriceInr" class="text-xl font-black text-sky-600">₹3,98,400</span>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] text-slate-400 font-bold block uppercase">Crypto Price</span>
+                  <span id="previewPriceEth" class="text-xs font-bold text-slate-600">1.7000 ETH</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Quick Tip Box -->
+          <div class="bg-sky-50 rounded-2xl p-4 border border-sky-100 text-xs text-slate-600 space-y-1">
+            <span class="font-bold text-sky-900">💡 Backend Integration:</span>
+            <p>Cards are automatically saved to your database API (`/api/cards`) and synced to your browser's local catalog. You can also click <strong>Copy SQL INSERT</strong> to paste directly into Supabase or pgAdmin.</p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ==================== CARDANGO LARGE FOOTER ==================== -->
+  <footer class="naruto-large-footer">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-10 pb-16 border-b border-white/20">
+        <div class="md:col-span-4 space-y-4">
+          <div class="flex items-center gap-3">
+            <img src="https://i.pinimg.com/1200x/da/6f/2c/da6f2c6782704e4120fc689f5da89482.jpg" alt="CARDANGO Logo" class="w-10 h-10 rounded-full object-cover shadow-lg border border-amber-400" />
+            <span class="brand-logo-text text-white">CARDANGO</span>
+          </div>
+          <p class="brand-tagline text-sky-100">
+            Building digital trading card experiences that inspire, connect, and preserve lasting value.
+          </p>
+        </div>
+        <div class="md:col-span-2 space-y-3">
+          <div class="footer-heading">SHOP</div>
+          <ul class="space-y-2 text-xs">
+            <li><a href="marketplace.html">All Collections</a></li>
+            <li><a href="marketplace.html">Dev Cards</a></li>
+            <li><a href="marketplace.html">Pokémon Cards</a></li>
+            <li><a href="marketplace.html">Anime Cards</a></li>
+            <li><a href="marketplace.html">Cricket Cards</a></li>
+          </ul>
+        </div>
+        <div class="md:col-span-3 space-y-3">
+          <div class="footer-heading">CREATOR STUDIO</div>
+          <ul class="space-y-2 text-xs">
+            <li><a href="upload.html">Upload New Card</a></li>
+            <li><a href="collection.html">Saved Collection</a></li>
+            <li><a href="trade.html">P2P Trade Escrow</a></li>
+          </ul>
+        </div>
+        <div class="md:col-span-3 space-y-3">
+          <div class="footer-heading">HELP & SUPPORT</div>
+          <ul class="space-y-2 text-xs">
+            <li><a href="#">SQL Schema Docs</a></li>
+            <li><a href="#">PostgreSQL Guide</a></li>
+            <li><a href="#">Grading Standards</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-sky-200 gap-4">
+        <p>&copy; 2026 CARDANGO Collectibles Inc. All rights reserved.</p>
+        <div class="flex gap-6">
+          <a href="#" class="hover:underline">Privacy Policy</a>
+          <a href="#" class="hover:underline">Terms of Service</a>
+          <a href="#" class="hover:underline">Database API</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- CART DRAWER -->
+  <div id="cartDrawer" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden justify-end transition-opacity">
+    <div class="w-full max-w-md bg-white h-full shadow-2xl flex flex-col">
+      <div class="p-4 border-b border-sky-100 flex items-center justify-between">
+        <h2 class="font-extrabold text-base text-slate-900">Your Shopping Cart</h2>
+        <button onclick="closeCartDrawer()" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">✕</button>
+      </div>
+      <div id="cartDrawerItems" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+      <div class="p-4 border-t border-sky-100 space-y-3 bg-slate-50">
+        <div class="flex justify-between text-sm font-bold text-slate-800">
+          <span>Total:</span>
+          <span id="cartDrawerTotal">₹0</span>
+        </div>
+        <button onclick="showToast('Proceeding to Checkout with Escrow Guarantee!')" class="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl shadow-md transition-colors">
+          Checkout Now
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+
+    let uploadedImageDataUrl = '';
+    let uploadedFileName = '';
+
+    // Switch between File Upload & URL input modes
+    function switchImageTab(mode) {
+      const tabFile = document.getElementById('tabUploadFile');
+      const tabUrl = document.getElementById('tabEnterUrl');
+      const secFile = document.getElementById('imageFileSection');
+      const secUrl = document.getElementById('imageUrlSection');
+
+      if (mode === 'file') {
+        tabFile.className = 'px-2.5 py-1 rounded-md bg-white text-sky-600 shadow-sm transition-all flex items-center gap-1';
+        tabUrl.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1';
+        secFile.classList.remove('hidden');
+        secUrl.classList.add('hidden');
+      } else {
+        tabUrl.className = 'px-2.5 py-1 rounded-md bg-white text-sky-600 shadow-sm transition-all flex items-center gap-1';
+        tabFile.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1';
+        secUrl.classList.remove('hidden');
+        secFile.classList.add('hidden');
+      }
+      updateLivePreview();
+    }
+
+    // Format file sizes
+    function formatBytes(bytes) {
+      if (!bytes || bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    // Handle Local File Selection
+    function handleImageFileSelected(e) {
+      const file = e.target.files && e.target.files[0];
+      if (file) processImageFile(file);
+    }
+
+    function resizeImageToSlab(file, maxDim = 900, quality = 0.85) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            let w = img.width;
+            let h = img.height;
+            if (w > maxDim || h > maxDim) {
+              if (w > h) {
+                h = Math.round((h * maxDim) / w);
+                w = maxDim;
+              } else {
+                w = Math.round((w * maxDim) / h);
+                h = maxDim;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.onerror = () => resolve(e.target.result);
+          img.src = e.target.result;
+        };
+        reader.onerror = () => resolve('');
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function processImageFile(file) {
+      if (!file.type.startsWith('image/')) {
+        showToast('Please select a valid image file (PNG, JPG, WEBP, GIF)');
+        return;
+      }
+      uploadedFileName = file.name;
+      showToast('Processing & optimizing image... ⏳');
+      const dataUrl = await resizeImageToSlab(file);
+      uploadedImageDataUrl = dataUrl;
+      
+      // Show file info banner
+      document.getElementById('fileThumbnail').src = uploadedImageDataUrl;
+      document.getElementById('fileNameDisplay').textContent = file.name;
+      const approxBytes = Math.round(dataUrl.length * 0.75);
+      document.getElementById('fileSizeDisplay').textContent = formatBytes(approxBytes);
+      document.getElementById('fileInfoBanner').classList.remove('hidden');
+      
+      updateLivePreview();
+      showToast(`Image ready: ${file.name} 📸`);
+    }
+
+    function handleUrlInput() {
+      uploadedImageDataUrl = '';
+      document.getElementById('fileInfoBanner').classList.add('hidden');
+      updateLivePreview();
+    }
+
+    function setPresetImage(url) {
+      uploadedImageDataUrl = '';
+      document.getElementById('fileInfoBanner').classList.add('hidden');
+      document.getElementById('inputImageUrl').value = url;
+      switchImageTab('url');
+      updateLivePreview();
+    }
+
+    // Generate SQL INSERT Statement
+    function generateSqlStatement() {
+      const title = (document.getElementById('inputTitle').value || 'New Graded Collectible').trim();
+      const category = document.getElementById('inputCategory').value;
+      const grade = document.getElementById('inputGrade').value;
+      const priceInr = parseFloat(document.getElementById('inputPriceInr').value) || 83000;
+      const priceUsd = Number((priceInr / USD_TO_INR).toFixed(2));
+      const priceEth = parseFloat(document.getElementById('inputPriceEth').value) || Number((priceUsd / 2800).toFixed(4));
+      let imageUrl = uploadedImageDataUrl || document.getElementById('inputImageUrl').value || 'uploads/card_1791720108934_dbyhqy.jpg';
+      imageUrl = normalizeCardImage(imageUrl);
+
+      const inCarousel = document.getElementById('inputInCarousel').checked ? 'TRUE' : 'FALSE';
+      const isSpotlight = document.getElementById('inputIsSpotlight').checked ? 'TRUE' : 'FALSE';
+      const description = (document.getElementById('inputDescription').value || 'Graded authentic collectible slab.').trim();
+
+      const esc = s => String(s || '').replace(/'/g, "''");
+      return `INSERT INTO cards (title, category, grade, price_usd, price_eth, image_url, is_in_carousel, is_spotlight, description)\nVALUES ('${esc(title)}', '${esc(category)}', '${esc(grade)}', ${priceUsd.toFixed(2)}, ${Number(priceEth).toFixed(4)}, '${esc(imageUrl)}', ${inCarousel}, ${isSpotlight}, '${esc(description)}');`;
+    }
+
+    // Live Studio Preview Logic
+    function updateLivePreview() {
+      const title = document.getElementById('inputTitle').value || 'Card Title Preview';
+      const category = document.getElementById('inputCategory').value;
+      const grade = document.getElementById('inputGrade').value;
+      const priceInr = parseFloat(document.getElementById('inputPriceInr').value) || 0;
+      const priceUsd = priceInr / USD_TO_INR;
+      const priceEth = parseFloat(document.getElementById('inputPriceEth').value) || (priceUsd / 2800);
+      let imageUrl = uploadedImageDataUrl || document.getElementById('inputImageUrl').value || 'uploads/card_1791720108934_dbyhqy.jpg';
+      imageUrl = normalizeCardImage(imageUrl);
+      const inCarousel = document.getElementById('inputInCarousel').checked;
+      const description = document.getElementById('inputDescription').value || 'Graded authentic collectible slab.';
+
+      document.getElementById('previewTitle').textContent = title;
+      const previewImg = document.getElementById('previewImage');
+      previewImg.src = imageUrl;
+      previewImg.onerror = function() {
+        this.src = 'uploads/card_1791720108934_dbyhqy.jpg';
+      };
+
+      document.getElementById('previewGradeBadge').textContent = grade;
+      document.getElementById('previewPriceInr').textContent = formatINRAmount(priceInr);
+      document.getElementById('previewPriceEth').textContent = priceEth.toFixed(4) + ' ETH';
+      document.getElementById('previewDescription').textContent = description;
+
+      // Category badge text
+      const catMap = {
+        dev: '💻 Dev Card',
+        pokemon: '⚡ Pokémon',
+        anime: '⛩️ Anime',
+        cricket: '🏏 Cricket',
+        football: '⚽ Football'
+      };
+      document.getElementById('previewCategoryBadge').textContent = catMap[category] || category;
+
+      // 3D Carousel Tag
+      const carouselTag = document.getElementById('previewCarouselTag');
+      if (inCarousel) carouselTag.classList.remove('hidden');
+      else carouselTag.classList.add('hidden');
+
+      // Update Live SQL Display Panel
+      const sql = generateSqlStatement();
+      const sqlEl = document.getElementById('liveSqlCode');
+      if (sqlEl) {
+        if (sql.length > 300 && sql.includes('data:image/')) {
+          sqlEl.textContent = sql.replace(/data:image\/[a-zA-Z]+;base64,[^']{20,}/, 'data:image/jpeg;base64,... [embedded image data]');
+        } else {
+          sqlEl.textContent = sql;
+        }
+      }
+    }
+
+    function syncEthPrice() {
+      const priceInr = parseFloat(document.getElementById('inputPriceInr').value) || 0;
+      const ethVal = (priceInr / (USD_TO_INR * 2800)).toFixed(4);
+      document.getElementById('inputPriceEth').value = ethVal;
+      updateLivePreview();
+    }
+
+    // Copy SQL INSERT Statement
+    function copySqlStatement() {
+      const sql = generateSqlStatement();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(sql).then(() => {
+          showToast('SQL INSERT copied to clipboard! 📋');
+        }).catch(() => fallbackCopy(sql));
+      } else {
+        fallbackCopy(sql);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('SQL INSERT copied to clipboard! 📋');
+    }
+
+    // Download .SQL File
+    function downloadSqlFile() {
+      const sql = generateSqlStatement();
+      const rawTitle = document.getElementById('inputTitle').value || 'card';
+      const slug = rawTitle.toLowerCase().replace(/[^a-z0-9]+/g, '_').substring(0, 30);
+      const blob = new Blob([sql], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `insert_${slug}.sql`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Downloaded .SQL insert script! 💾');
+    }
+
+    // Handle Form Submit (Upload Card to API, SQL Storage and Local Storage)
+    async function handleCardUpload(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      try {
+        let imageUrl = uploadedImageDataUrl || document.getElementById('inputImageUrl').value.trim();
+        if (!imageUrl) {
+          showToast('Please upload an image file or enter an image URL! ⚠️');
+          return;
+        }
+
+        // 1. If user uploaded a local image file (data:image/...), attempt upload to API
+        if (imageUrl.startsWith('data:image/')) {
+          try {
+            const uploadRes = await fetch(`${API_BASE}/api/upload-image`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                data: imageUrl,
+                name: uploadedFileName || 'uploaded_card.png'
+              })
+            });
+            if (uploadRes.ok) {
+              const uploadJson = await uploadRes.json();
+              if (uploadJson.url) {
+                imageUrl = normalizeCardImage(uploadJson.url);
+              }
+            }
+          } catch (uploadErr) {
+            console.warn('API image upload offline, saving via local session/storage');
+          }
+        } else if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+          try {
+            const urlRes = await fetch(`${API_BASE}/api/upload-image-url`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url: imageUrl })
+            });
+            if (urlRes.ok) {
+              const urlJson = await urlRes.json();
+              if (urlJson.url) {
+                imageUrl = normalizeCardImage(urlJson.url);
+              }
+            }
+          } catch (urlErr) {
+            console.warn('API URL cache offline, keeping direct URL');
+          }
+        }
+
+        imageUrl = normalizeCardImage(imageUrl);
+
+        const rawPriceInr = parseFloat(document.getElementById('inputPriceInr').value) || 83000;
+        const calculatedPriceUsd = Number((rawPriceInr / USD_TO_INR).toFixed(2));
+        const rawPriceEth = parseFloat(document.getElementById('inputPriceEth').value) || Number((calculatedPriceUsd / 2800).toFixed(4));
+
+        const newCard = {
+          title: (document.getElementById('inputTitle').value || 'Custom Graded Slab').trim(),
+          category: document.getElementById('inputCategory').value,
+          grade: document.getElementById('inputGrade').value,
+          price: calculatedPriceUsd,
+          priceEth: rawPriceEth,
+          image: imageUrl,
+          is_in_carousel: document.getElementById('inputInCarousel').checked,
+          is_spotlight: document.getElementById('inputIsSpotlight').checked,
+          description: (document.getElementById('inputDescription').value || 'Graded authentic collectible slab.').trim()
+        };
+
+        const esc = s => String(s || '').replace(/'/g, "''");
+        const sqlInsert = `\n-- Uploaded Card: ${esc(newCard.title)}\nINSERT INTO cards (title, category, grade, price_usd, price_eth, image_url, is_in_carousel, is_spotlight, description)\nVALUES ('${esc(newCard.title)}', '${esc(newCard.category)}', '${esc(newCard.grade)}', ${newCard.price.toFixed(2)}, ${newCard.priceEth.toFixed(4)}, '${esc(newCard.image)}', ${newCard.is_in_carousel ? 'TRUE' : 'FALSE'}, ${newCard.is_spotlight ? 'TRUE' : 'FALSE'}, '${esc(newCard.description)}');\n`;
+
+        // 2. Try sending to backend API (which automatically appends to schema.sql and PostgreSQL)
+        let backendSaved = false;
+        try {
+          const res = await fetch(`${API_BASE}/api/cards`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: newCard.title,
+              category: newCard.category,
+              grade: newCard.grade,
+              price_usd: newCard.price,
+              price_eth: newCard.priceEth,
+              image_url: newCard.image,
+              is_in_carousel: newCard.is_in_carousel,
+              is_spotlight: newCard.is_spotlight,
+              description: newCard.description
+            })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.card) {
+              if (data.card.id) newCard.id = data.card.id;
+              if (data.card.image_url) newCard.image = normalizeCardImage(data.card.image_url);
+            }
+            backendSaved = true;
+          }
+        } catch (networkErr) {
+          console.warn('Backend server /api/cards unreachable, falling back to local storage');
+        }
+
+        // If backend was not reached via /api/cards, attempt /api/save-sql as fallback
+        if (!backendSaved) {
+          try {
+            await fetch(`${API_BASE}/api/save-sql`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ sql: sqlInsert })
+            });
+          } catch (e) {}
+        }
+
+        // 3. Save to Local Storage so frontend reflects immediately on index & marketplace
+        const catStyleMap = {
+          pokemon: { badgeColor: 'bg-amber-100 text-amber-800 border-amber-300', cardAccent: 'border-amber-500' },
+          anime: { badgeColor: 'bg-purple-100 text-purple-800 border-purple-300', cardAccent: 'border-purple-500' },
+          football: { badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300', cardAccent: 'border-emerald-500' },
+          cricket: { badgeColor: 'bg-sky-100 text-sky-800 border-sky-300', cardAccent: 'border-sky-500' },
+          dev: { badgeColor: 'bg-indigo-100 text-indigo-800 border-indigo-300', cardAccent: 'border-indigo-500' }
+        };
+        const catStyle = catStyleMap[newCard.category] || { badgeColor: 'bg-sky-100 text-sky-800 border-sky-300', cardAccent: 'border-sky-500' };
+
+        const customCards = JSON.parse(localStorage.getItem('cardango_uploaded_cards') || '[]');
+        if (!newCard.id) newCard.id = Date.now();
+        newCard.categoryLabel = (newCard.category || 'DEV').toUpperCase() + ' CARD';
+        newCard.badgeColor = catStyle.badgeColor;
+        newCard.cardAccent = catStyle.cardAccent;
+        newCard.image = normalizeCardImage(newCard.image);
+
+        const existingIdx = customCards.findIndex(c => c.id === newCard.id);
+        if (existingIdx !== -1) {
+          customCards[existingIdx] = newCard;
+        } else {
+          customCards.unshift(newCard);
+        }
+
+        try {
+          localStorage.setItem('cardango_uploaded_cards', JSON.stringify(customCards));
+        } catch (storageErr) {
+          try {
+            const trimmed = customCards.slice(0, 5);
+            localStorage.setItem('cardango_uploaded_cards', JSON.stringify(trimmed));
+          } catch (e) {
+            console.warn('LocalStorage quota limit reached, stored in current session');
+          }
+        }
+
+        showToast(`Successfully published "${newCard.title}"! 🎉`);
+
+        // Redirect to marketplace catalog
+        setTimeout(() => {
+          window.location.href = 'marketplace.html';
+        }, 800);
+      } catch (err) {
+        console.error('Upload failed:', err);
+        showToast('Error uploading card: ' + err.message);
+      }
+    }
+
+    // Set initial preview and setup drag-and-drop on load
+    document.addEventListener('DOMContentLoaded', () => {
+      
+      updateLivePreview();
+
+      // Drag & Drop Setup
+      const dropZone = document.getElementById('imageDropZone');
+      if (dropZone) {
+        ['dragenter', 'dragover'].forEach(eventName => {
+          dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('border-sky-600', 'bg-sky-100');
+          });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+          dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('border-sky-600', 'bg-sky-100');
+          });
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+          const dt = e.dataTransfer;
+          const files = dt.files;
+          if (files && files.length > 0) {
+            processImageFile(files[0]);
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
