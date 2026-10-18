@@ -281,7 +281,26 @@ const CARDS_DATA = [
  
 
 let activeTradeIndex = 0;
-let cart = JSON.parse(localStorage.getItem('cardango_cart') || '[]');
+function safeParseJSON(value, fallback) {
+  try {
+    const parsed = JSON.parse(value);
+    return parsed === null || parsed === undefined ? fallback : parsed;
+  } catch (e) {
+    return fallback;
+  }
+}
+function readLocalJSON(key, fallback) {
+  try {
+    if (typeof localStorage === 'undefined') return fallback;
+    const raw = localStorage.getItem(key);
+    if (raw === null || raw === undefined || raw === '') return fallback;
+    return safeParseJSON(raw, fallback);
+  } catch (e) {
+    return fallback;
+  }
+}
+let cart = readLocalJSON('cardango_cart', []);
+if (!Array.isArray(cart)) cart = [];
 let activeCategory = 'all';
 let activePriceFilter = 'all';
 let activeMaxPrice = 5000;
@@ -289,10 +308,11 @@ let activeEthFilter = 'all';
 let activeRarityFilter = 'all';
 let searchQuery = '';
 
-let myCollection = JSON.parse(localStorage.getItem('cardango_saved_cards') || '[]');
+let myCollection = readLocalJSON('cardango_saved_cards', []);
+if (!Array.isArray(myCollection)) myCollection = [];
 
 try {
-  const uploadedCards = JSON.parse(localStorage.getItem('cardango_uploaded_cards') || '[]');
+  const uploadedCards = readLocalJSON('cardango_uploaded_cards', []);
   if (Array.isArray(uploadedCards) && uploadedCards.length > 0) {
     uploadedCards.forEach(card => {
       card.image = normalizeCardImage(card.image || card.image_url);
@@ -313,12 +333,12 @@ const CATEGORY_STYLE_MAP = {
 
 async function syncCardsWithBackend() {
   try {
-    const res = await fetch('/api/cards');
+    const res = await fetch(`${API_BASE}/api/cards`);
     if (res.ok) {
       const dbCards = await res.json();
       if (Array.isArray(dbCards) && dbCards.length > 0) {
-        const localUploaded = JSON.parse(localStorage.getItem('cardango_uploaded_cards') || '[]');
-        const uploadedIds = new Set(localUploaded.map(u => u.id));
+        const localUploaded = readLocalJSON('cardango_uploaded_cards', []);
+        const uploadedIds = new Set((Array.isArray(localUploaded) ? localUploaded : []).map(u => u && u.id));
 
         dbCards.forEach(dbCard => {
           const style = CATEGORY_STYLE_MAP[dbCard.category] || {
@@ -385,6 +405,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// Trade Proposals derived from live catalog (prevents ReferenceError on trade.html)
+const TRADE_PROPOSALS = (typeof CARDS_DATA !== 'undefined' ? CARDS_DATA : []).slice(0, 8).map((card, idx) => ({
+  cardId: card.id,
+  cardName: card.title,
+  cardPrice: card.price,
+  cardPriceEth: card.priceEth,
+  grade: card.grade,
+  image: card.image,
+  traderName: ['Aarav Mehta', 'Sofia D’Souza', 'Kabir Rao', 'Elena Fernandes', 'Arjun Nair', 'Mira Kapoor', 'Dev Patel', 'Zara Khan'][idx % 8],
+  traderRole: ['Pro Collector • Mumbai', 'Vault Verified • Goa', 'Slab Expert • Delhi', 'Top Trader • Bengaluru', 'Grail Hunter • Pune', 'Mint Specialist • Jaipur', 'Holo Scout • Hyderabad', 'Vault Curator • Chennai'][idx % 8]
+}));
+
 // Render 3D Stack Trade Wheel (Clean, Simple Architecture)
 function renderGabrielBeaugoninTradeSlider() {
   const stack = document.getElementById('tradeStack') || document.getElementById('gbeaugoninTradeStack');
@@ -393,7 +425,12 @@ function renderGabrielBeaugoninTradeSlider() {
 
   if (!stack) return;
 
-  const currentTrade = TRADE_PROPOSALS[activeTradeIndex];
+  if (!Array.isArray(TRADE_PROPOSALS) || TRADE_PROPOSALS.length === 0) {
+    stack.innerHTML = '<div class="text-center text-xs text-slate-400 py-10">No trade proposals available yet.</div>';
+    return;
+  }
+
+  const currentTrade = TRADE_PROPOSALS[activeTradeIndex % TRADE_PROPOSALS.length] || TRADE_PROPOSALS[0];
 
   // 1. Update Left Info Panel (Card Name, Actual Price & Trader Info)
   if (leftInfo) {
@@ -580,11 +617,26 @@ function renderMarketplaceGrid() {
 
   container.innerHTML = filtered.map(card => {
     const saved = isCardSaved(card.id);
+    const cardPrice = Number(card.price) || 0;
+    const ethPrice = card.priceEth ? Number(card.priceEth).toFixed(2) : null;
+
     return `
-    <div class="holo-card-container col-span-1 relative group">
+    <div class="holo-card-container col-span-1 relative group flex flex-col">
       <div onclick="openCardInspectModal(${card.id})" class="holo-card pure-card-slab group" data-card-id="${card.id}">
         <div class="holo-card-glare"></div>
         <img src="${normalizeCardImage(card.image)}" alt="${card.title}" class="w-full h-full object-cover" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='uploads/card_1791720108934_dbyhqy.jpg';" />
+        
+        <!-- Bottom Price Badge on Slab -->
+        <div class="absolute bottom-2 left-2 right-2 z-10 flex items-center justify-between pointer-events-none">
+          <span class="px-2 py-0.5 bg-slate-950/85 backdrop-blur-sm text-amber-300 text-[11px] font-black rounded border border-slate-700/80 shadow">
+            ${formatINR(cardPrice)}
+          </span>
+          ${ethPrice ? `
+          <span class="px-1.5 py-0.5 bg-slate-900/80 backdrop-blur-sm text-sky-200 text-[10px] font-bold rounded border border-slate-700/60 shadow">
+            ${ethPrice} ETH
+          </span>` : ''}
+        </div>
+
         <div class="inspect-overlay">
           <svg class="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
           <span>CLICK TO INSPECT</span>
@@ -594,6 +646,16 @@ function renderMarketplaceGrid() {
       <button onclick="saveCardToCollection(${card.id}, event)" data-save-btn="${card.id}" class="absolute top-2 right-2 z-20 w-8 h-8 rounded-full bg-white/90 hover:bg-white border ${saved ? 'border-amber-300 bg-amber-50 text-amber-500' : 'border-slate-200 text-slate-400 hover:text-amber-500'} shadow-sm flex items-center justify-center transition-all" title="${saved ? 'Saved in Collection' : 'Save to Collection'}">
         <svg class="w-4 h-4 ${saved ? 'fill-current' : 'fill-none stroke-current'}" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
       </button>
+
+      <!-- Card Title & Price Footer Bar -->
+      <div class="mt-2.5 px-1 flex items-center justify-between gap-1">
+        <div class="truncate pr-1">
+          <h4 class="text-xs font-extrabold text-slate-800 truncate" title="${card.title}">${card.title}</h4>
+        </div>
+        <div class="text-right flex-shrink-0">
+          <span class="text-xs font-black text-sky-600">${formatINR(cardPrice)}</span>
+        </div>
+      </div>
     </div>
   `;
   }).join('');
@@ -624,9 +686,6 @@ function openCardInspectModal(cardId) {
           <span class="px-2.5 py-0.5 text-xs font-bold rounded-full border ${card.badgeColor}">
             ${card.categoryLabel}
           </span>
-          <span class="px-2.5 py-0.5 text-xs font-extrabold bg-slate-900 text-amber-300 rounded">
-            ${card.grade}
-          </span>
         </div>
 
         <h2 class="text-2xl font-black text-slate-900 tracking-tight">${card.title}</h2>
@@ -653,7 +712,6 @@ function openCardInspectModal(cardId) {
           </div>
 
           <div class="space-y-1.5 text-xs text-slate-600 bg-sky-50 p-3 rounded-xl border border-sky-100">
-            <div><strong>Centering:</strong> 10 Gem Mint</div>
             <div><strong>CARDANGO Status:</strong> Verified In Escrow</div>
           </div>
 
@@ -703,9 +761,6 @@ function loadCardDetailPage() {
       <div class="flex items-center gap-2">
         <span class="px-3 py-1 text-xs font-extrabold rounded-full border ${card.badgeColor}">
           ${card.categoryLabel}
-        </span>
-        <span class="px-2.5 py-0.5 text-xs font-bold bg-slate-900 text-amber-300 rounded">
-          ${card.grade}
         </span>
         <span class="text-xs text-slate-500 font-semibold">Edition: ${card.edition}</span>
       </div>
@@ -1208,7 +1263,6 @@ function renderSavedCollection() {
 
         <div class="flex items-center gap-1.5 mb-2">
           <span class="px-2 py-0.5 text-[10px] font-bold rounded ${card.badgeColor}">${card.categoryLabel}</span>
-          <span class="px-2 py-0.5 text-[10px] font-black bg-slate-900 text-amber-300 rounded">${card.grade}</span>
         </div>
 
         <h3 class="font-extrabold text-sm text-slate-900 line-clamp-1 mb-1" title="${card.title}">${card.title}</h3>

@@ -10,48 +10,20 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const url = require('url');
-
+const mysql = require('mysql2/promise');
+require('dotenv').config();
+const db = mysql.createPool({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '#Keval123',
+    database: process.env.DB_NAME || 'CARDANGO',
+    waitForConnections: true,
+    connectionLimit: 10
+});
 const PORT = process.env.PORT || 3000;
-const DATA_FILE = path.join(__dirname, 'cards.json');
 
-// Read cards dynamically from cards.json
-function getLocalCards() {
-  try {
-    if (fs.existsSync(DATA_FILE)) {
-      const data = fs.readFileSync(DATA_FILE, 'utf8');
-      const parsed = JSON.parse(data);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
-      }
-    }
-  } catch (err) {
-    console.error('Error reading cards.json:', err);
-  }
-  return [];
-}
-
-function saveLocalCards(cards) {
-  try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(cards, null, 2), 'utf8');
-  } catch (err) {
-    console.error('Error writing cards.json:', err);
-  }
-}
-
-let pgPool = null;
-if (process.env.DATABASE_URL) {
-  try {
-    const { Pool } = require('pg');
-    pgPool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-    });
-    console.log('✓ Connected to PostgreSQL database');
-  } catch (e) {
-    console.log('PostgreSQL package not installed or connection failed, using local JSON storage.');
-  }
-}
+// NOTE: No JSON/file storage. MySQL (CARDANGO.cards) is the ONLY data store.
+// All data lives in schema.sql seed + live MySQL rows.
 
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) {
@@ -93,7 +65,7 @@ function downloadAndSaveImageUrl(imageUrl) {
           return resolve(imageUrl);
         }
         const contentType = (res.headers['content-type'] || '').toLowerCase();
-        let ext = '.jpg';m
+        let ext = '.jpg';
         if (contentType.includes('png')) ext = '.png';
         else if (contentType.includes('webp')) ext = '.webp';
         else if (contentType.includes('gif')) ext = '.gif';
@@ -155,47 +127,30 @@ const server = http.createServer(async (req, res) => {
     const inCarousel = reqUrl.searchParams.get('carousel') === 'true';
 
     try {
-      if (pgPool) {
-        let query = 'SELECT * FROM cards WHERE 1=1';
-        const params = [];
-        if (category && category !== 'all') {
-          params.push(category);
-          query += ` AND category = $${params.length}`;
-        }
-        if (inCarousel) {
-          query += ` AND is_in_carousel = TRUE`;
-        }
+      // MySQL ONLY - SQL is single source of truth
+      let query = 'SELECT * FROM cards WHERE 1=1';
+      const params = [];
+      if (category && category !== 'all') {
+        params.push(category);
+        query += ' AND category = ?';
+      }
+      if (inCarousel) {
+        query += ' AND is_in_carousel = 1';
+      }
         if (search) {
           params.push(`%${search}%`);
-          query += ` AND (title ILIKE $${params.length} OR grade ILIKE $${params.length})`;
+          query += ' AND (title LIKE ? OR grade LIKE ?)';
         }
-        query += ' ORDER BY id DESC';
-        const result = await pgPool.query(query, params);
+        query += ' ORDER BY id ASC';
+        const [rows] = await db.query(query, params);
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(result.rows));
+        res.end(JSON.stringify(rows));
         return;
-      }
     } catch (dbErr) {
-      console.warn('Postgres query failed, falling back to local store:', dbErr.message);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Database error: ' + dbErr.message }));
+      return;
     }
-  
-    let cards = getLocalCards();
-    if (category && category !== 'all') {
-      cards = cards.filter(c => c.category === category);
-    }
-    if (inCarousel) {
-      cards = cards.filter(c => c.is_in_carousel);
-    }
-    if (search) {
-      cards = cards.filter(c => 
-        (c.title && c.title.toLowerCase().includes(search)) || 
-        (c.grade && c.grade.toLowerCase().includes(search))
-      );
-    }
-
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(cards));
-    return;
   }
 
   // 2. POST /api/upload-image - Upload Local Image File
@@ -331,51 +286,25 @@ if (req.method === 'POST' && pathname === '/api/cards') {
         description: String(cardData.description || 'Graded authentic collectible slab.').trim()
       };
 
-      // 4. Persistence: Always write & append to schema.sql
-      const esc = s => String(s || '').replace(/'/g, "''");
-      const sqlInsert = `\n-- Uploaded Card: ${esc(newCard.title)}\nINSERT INTO cards (title, category, grade, price_usd, price_eth, image_url, is_in_carousel, is_spotlight, description)\nVALUES ('${esc(newCard.title)}', '${esc(newCard.category)}', '${esc(newCard.grade)}', ${newCard.price_usd.toFixed(2)}, ${newCard.price_eth.toFixed(4)}, '${esc(newCard.image_url)}', ${newCard.is_in_carousel ? 'TRUE' : 'FALSE'}, ${newCard.is_spotlight ? 'TRUE' : 'FALSE'}, '${esc(newCard.description)}');\n`;
-
-      const schemaFile = path.join(__dirname, 'schema.sql');
-      try {
-        fs.appendFileSync(schemaFile, sqlInsert, 'utf8');
-      } catch (sqlErr) {
-        console.error('Error appending card to schema.sql:', sqlErr);
-      }
-
-      // 5. Persistence: PostgreSQL (if connected)
-      if (pgPool) {
+      // 4. INSERT into MySQL ONLY (SQL is single source of truth)
         const insertQuery = `
           INSERT INTO cards (
             title, category, grade, price_usd, price_eth, 
             image_url, is_in_carousel, is_spotlight, description
           )
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-          RETURNING *;
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
         `;
         const values = [
           newCard.title, newCard.category, newCard.grade,
           newCard.price_usd, newCard.price_eth, newCard.image_url,
-          newCard.is_in_carousel, newCard.is_spotlight, newCard.description
+          newCard.is_in_carousel ? 1 : 0, newCard.is_spotlight ? 1 : 0, newCard.description
         ];
 
-        const result = await pgPool.query(insertQuery, values);
+        const [insertResult] = await db.query(insertQuery, values);
+        const [createdRows] = await db.query('SELECT * FROM cards WHERE id = ?', [insertResult.insertId]);
         res.writeHead(201, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, card: result.rows[0], sql: sqlInsert }));
+        res.end(JSON.stringify({ success: true, card: createdRows[0] }));
         return;
-      }
-
-      // 6. Persistence: Local Storage Fallback
-      const cards = getLocalCards();
-      const maxId = cards.reduce((acc, curr) => Math.max(acc, Number(curr.id) || 0), 0);
-      newCard.id = maxId + 1;
-      newCard.created_at = new Date().toISOString();
-
-      cards.unshift(newCard);
-      saveLocalCards(cards);
-
-      res.writeHead(201, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, card: newCard, sql: sqlInsert }));
-
     } catch (err) {
       console.error('Unhandled POST /api/cards error:', err);
       if (!res.headersSent) {
@@ -383,46 +312,16 @@ if (req.method === 'POST' && pathname === '/api/cards') {
         res.end(JSON.stringify({ error: 'Failed to save card: ' + err.message }));
       }
     }
-  });
-  return;
+  }
+);
 }
 
-  // POST /api/save-sql - Direct SQL insertion & schema.sql append
-  if (req.method === 'POST' && pathname === '/api/save-sql') {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
-    req.on('end', async () => {
-      try {
-        const payload = JSON.parse(body);
-        if (!payload.sql) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Missing SQL statement' }));
-          return;
-        }
-        const schemaFile = path.join(__dirname, 'schema.sql');
-        fs.appendFileSync(schemaFile, '\n' + payload.sql.trim() + '\n', 'utf8');
 
-        if (pgPool) {
-          try {
-            await pgPool.query(payload.sql);
-          } catch (pgErr) {
-            console.warn('PG execute warning:', pgErr.message);
-          }
-        }
-
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, message: 'Appended to schema.sql successfully' }));
-      } catch (err) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: err.message }));
-      }
-    });
-    return;
-  }
-  // 3. GET /api/export-sql - Generate SQL INSERT Statements
+  // 5. GET /api/export-sql - Generate SQL INSERTs FROM MySQL (no local data)
   if (req.method === 'GET' && pathname === '/api/export-sql') {
-    const cards = getLocalCards();
-    const sqlStatements = cards.map(c => {
+    try {
+      const [rows] = await db.query('SELECT * FROM cards ORDER BY id ASC');
+    const sqlStatements = rows.map(c => {
       const escape = s => String(s || '').replace(/'/g, "''");
       return `INSERT INTO cards (title, category, grade, price_usd, price_eth, image_url, is_in_carousel, is_spotlight, description) VALUES ('${escape(c.title)}', '${escape(c.category)}', '${escape(c.grade)}', ${c.price_usd}, ${c.price_eth}, '${escape(c.image_url)}', ${c.is_in_carousel ? 'TRUE' : 'FALSE'}, ${c.is_spotlight ? 'TRUE' : 'FALSE'}, '${escape(c.description)}');`;
     }).join('\n\n');
@@ -430,6 +329,11 @@ if (req.method === 'POST' && pathname === '/api/cards') {
     res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end(sqlStatements);
     return;
+    } catch (exportErr) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Database error: ' + exportErr.message }));
+      return;
+    }
   }
 
   // ==================== STATIC FILE SERVING ====================
