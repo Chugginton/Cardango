@@ -31,7 +31,6 @@ const CARDS_DATA = [
     edition: "1st Edition",
     price: 2450,
     priceEth: 0.88,
-    grade: "PSA 10 Gem Mint",
     image: "uploads/card_1791720108934_dbyhqy.jpg",
     badgeColor: "bg-amber-100 text-amber-800 border-amber-300",
     cardAccent: "border-amber-500",
@@ -46,7 +45,6 @@ const CARDS_DATA = [
     edition: "1st Edition",
     price: 3450,
     priceEth: 1.25,
-    grade: "BGS 9.5 Gem Mint",
     image: "https://i.pinimg.com/736x/35/ca/32/35ca32abb63da8220873970a391d6876.jpg",
     badgeColor: "bg-amber-100 text-amber-800 border-amber-300",
     cardAccent: "border-amber-500",
@@ -61,7 +59,6 @@ const CARDS_DATA = [
     edition: "1st Edition",
     price: 2890,
     priceEth: 1.02,
-    grade: "PSA 10 Gem Mint",
     image: "https://i.pinimg.com/736x/49/41/8d/49418d6198c0ead91eb561b62d936ee0.jpg",
     badgeColor: "bg-amber-100 text-amber-800 border-amber-300",
     cardAccent: "border-amber-500",
@@ -76,7 +73,6 @@ const CARDS_DATA = [
     edition: "1st Edition",
     price: 680,
     priceEth: 0.24,
-    grade: "PSA 10 Gem Mint",
     image: "https://i.pinimg.com/1200x/ae/bb/a2/aebba27862a3df2176d06c34c0de2d9a.jpg",
     badgeColor: "bg-amber-100 text-amber-800 border-amber-300",
     cardAccent: "border-amber-500",
@@ -91,7 +87,6 @@ const CARDS_DATA = [
     edition: "1st Edition",
     price: 1100,
     priceEth: 0.39,
-    grade: "PSA 10 Gem Mint",
     image: "https://i.pinimg.com/736x/28/83/a8/2883a8ea732d85a3e2c14b1fdf5afb17.jpg",
     badgeColor: "bg-amber-100 text-amber-800 border-amber-300",
     cardAccent: "border-amber-500",
@@ -106,7 +101,6 @@ const CARDS_DATA = [
     edition: "1st Edition",
     price: 950,
     priceEth: 0.34,
-    grade: "BGS 10 Pristine",
     image: "https://i.pinimg.com/1200x/7c/32/67/7c32670bc75b5b3f6eb3a5fdc9740164.jpg",
     badgeColor: "bg-amber-100 text-amber-800 border-amber-300",
     cardAccent: "border-amber-500",
@@ -121,7 +115,6 @@ const CARDS_DATA = [
     edition: "1st Edition",
     price: 4200,
     priceEth: 1.5,
-    grade: "PSA 10 Gem Mint",
     image: "https://i.pinimg.com/1200x/0a/7b/7b/0a7b7b1322c6c170bebd94efca62dc75.jpg",
     badgeColor: "bg-amber-100 text-amber-800 border-amber-300",
     cardAccent: "border-amber-500",
@@ -136,7 +129,6 @@ const CARDS_DATA = [
     edition: "1st Edition",
     price: 1950,
     priceEth: 0.69,
-    grade: "BGS 10 Pristine",
     image: "https://i.pinimg.com/1200x/8a/6f/20/8a6f2091122f67b8813a9849b742b60a.jpg",
     badgeColor: "bg-purple-100 text-purple-800 border-purple-300",
     cardAccent: "border-purple-500",
@@ -151,7 +143,6 @@ const CARDS_DATA = [
     edition: "1st Edition",
     price: 1680,
     priceEth: 0.59,
-    grade: "PSA 10 Gem Mint",
     image: "https://i.pinimg.com/1200x/6b/9b/1d/6b9b1d82363e47e3f8cd0fb25a41871e.jpg",
     badgeColor: "bg-purple-100 text-purple-800 border-purple-300",
     cardAccent: "border-purple-500",
@@ -166,7 +157,6 @@ const CARDS_DATA = [
     edition: "1st Edition",
     price: 1450,
     priceEth: 0.51,
-    grade: "PSA 10 Gem Mint",
     image: "https://i.pinimg.com/1200x/60/18/39/6018396436f97c3de5ae3f9a9ff44f08.jpg",
     badgeColor: "bg-purple-100 text-purple-800 border-purple-300",
     cardAccent: "border-purple-500",
@@ -181,7 +171,6 @@ const CARDS_DATA = [
     edition: "1st Edition",
     price: 2100,
     priceEth: 0.75,
-    grade: "BGS 10 Pristine",
     image: "https://i.pinimg.com/736x/d6/3a/74/d63a7450e6aea6186bb4db0e418a8976.jpg",
     badgeColor: "bg-purple-100 text-purple-800 border-purple-300",
     cardAccent: "border-purple-500",
@@ -196,7 +185,6 @@ const CARDS_DATA = [
     edition: "1st Edition",
     price: 1850,
     priceEth: 0.65,
-    grade: "PSA 10 Gem Mint",
     image: "https://i.pinimg.com/736x/35/1f/c5/351fc51d72cd1b4528c95125d1b90ea1.jpg",
     badgeColor: "bg-purple-100 text-purple-800 border-purple-300",
     cardAccent: "border-purple-500",
@@ -211,7 +199,6 @@ const CARDS_DATA = [
     edition: "1st Edition",
     price: 4800,
     priceEth: 1.7,
-    grade: "PSA 10 Gem Mint",
     image: "https://i.pinimg.com/736x/da/6f/2c/da6f2c6782704e4120fc689f5da89482.jpg",
     badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-300",
     cardAccent: "border-emerald-500",
@@ -226,7 +213,6 @@ const CARDS_DATA = [
     edition: "1st Edition",
     price: 4200,
     priceEth: 1.5,
-    grade: "BGS 9.5 Gem Mint",
     image: "https://i.pinimg.com/736x/12/ce/23/12ce236055ea444ce30780afda629a5d.jpg",
     badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-300",
     cardAccent: "border-emerald-500",
@@ -241,7 +227,6 @@ const CARDS_DATA = [
     edition: "1st Edition",
     price: 2600,
     priceEth: 0.92,
-    grade: "PSA 10 Gem Mint",
     image: "https://i.pinimg.com/736x/a9/78/19/a97819aa814cf2614b9b8ce97a71248e.jpg",
     badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-300",
     cardAccent: "border-emerald-500",
@@ -256,7 +241,6 @@ const CARDS_DATA = [
     edition: "1st Edition",
     price: 4100,
     priceEth: 1.45,
-    grade: "BGS 9.5 Gem Mint",
     image: "https://i.pinimg.com/736x/42/e3/1a/42e31a89a861c1bf09dd484ceb6babac.jpg",
     badgeColor: "bg-sky-100 text-sky-800 border-sky-300",
     cardAccent: "border-sky-500",
@@ -271,7 +255,6 @@ const CARDS_DATA = [
     edition: "1st Edition",
     price: 2200,
     priceEth: 0.78,
-    grade: "BGS 9.5 Gem Mint",
     image: "https://i.pinimg.com/1200x/52/c9/06/52c9067bd5e9c4188f8241857fca1597.jpg",
     badgeColor: "bg-indigo-100 text-indigo-800 border-indigo-300",
     cardAccent: "border-indigo-500",
@@ -352,13 +335,12 @@ async function syncCardsWithBackend() {
             category: dbCard.category,
             categoryLabel: style.label,
             rarity: 'Mythic Rare',
-            grade: dbCard.grade || 'PSA 10 Gem Mint',
             price: parseFloat(dbCard.price_usd || dbCard.price || 100),
             priceEth: parseFloat(dbCard.price_eth || dbCard.priceEth || 0.05),
             image: normalizeCardImage(dbCard.image_url || dbCard.image),
             badgeColor: style.badgeColor,
             cardAccent: style.cardAccent,
-            description: dbCard.description || 'Graded authentic collectible slab.'
+            description: dbCard.description || 'Authentic collectible slab.'
           };
           const existingIdx = CARDS_DATA.findIndex(c => c.id === formatted.id);
           if (existingIdx !== -1) {
@@ -381,6 +363,7 @@ async function syncCardsWithBackend() {
 
 // DOM Initialization
 document.addEventListener('DOMContentLoaded', () => {
+  initCardangoAuth();
   syncCardsWithBackend();
   updateCartBadge();
   updateCollectionBadge();
@@ -411,7 +394,6 @@ const TRADE_PROPOSALS = (typeof CARDS_DATA !== 'undefined' ? CARDS_DATA : []).sl
   cardName: card.title,
   cardPrice: card.price,
   cardPriceEth: card.priceEth,
-  grade: card.grade,
   image: card.image,
   traderName: ['Aarav Mehta', 'Sofia D’Souza', 'Kabir Rao', 'Elena Fernandes', 'Arjun Nair', 'Mira Kapoor', 'Dev Patel', 'Zara Khan'][idx % 8],
   traderRole: ['Pro Collector • Mumbai', 'Vault Verified • Goa', 'Slab Expert • Delhi', 'Top Trader • Bengaluru', 'Grail Hunter • Pune', 'Mint Specialist • Jaipur', 'Holo Scout • Hyderabad', 'Vault Curator • Chennai'][idx % 8]
@@ -438,7 +420,7 @@ function renderGabrielBeaugoninTradeSlider() {
       <div class="space-y-4">
         <div class="inline-flex items-center gap-2 px-3 py-1 bg-sky-100 text-sky-800 text-xs font-black rounded-full uppercase tracking-wider border border-sky-200">
           <span class="w-2 h-2 rounded-full bg-sky-600"></span>
-          <span>${currentTrade.grade} • VERIFIED ESCROW</span>
+          <span>VERIFIED ESCROW</span>
         </div>
 
         <div>
@@ -503,9 +485,6 @@ function renderGabrielBeaugoninTradeSlider() {
       <div onclick="setTradeIndex(${idx})" class="trade-stack-card ${posClass}" data-trade-idx="${idx}">
         <div class="trade-card-inner full-slab-card">
           <img src="${item.image}" alt="${item.cardName}" class="w-full h-full object-cover" />
-          <div class="full-slab-overlay">
-            <span class="full-slab-grade">${item.grade}</span>
-          </div>
         </div>
       </div>
     `;
@@ -1127,8 +1106,10 @@ function closeTradeModal() {
 }
 
 function submitTradeOffer() {
-  showToast('Trade proposal submitted to CARDANGO escrow!');
-  closeTradeModal();
+  requireAuth('propose swaps and trades', () => {
+    showToast('Trade proposal submitted to CARDANGO escrow! 🛡️');
+    closeTradeModal();
+  });
 }
 
 function submitSimpleInquiry() {
@@ -1147,26 +1128,28 @@ function saveCardToCollection(cardId, e) {
     e.stopPropagation();
     e.preventDefault();
   }
-  const card = CARDS_DATA.find(c => c.id === cardId);
-  if (!card) return;
+  requireAuth('save cards to your collection', () => {
+    const card = CARDS_DATA.find(c => c.id === cardId);
+    if (!card) return;
 
-  const index = myCollection.findIndex(c => c.id === cardId);
-  if (index === -1) {
-    myCollection.push(card);
-    localStorage.setItem('cardango_saved_cards', JSON.stringify(myCollection));
-    showToast(`Saved "${card.title}" to Your Collection! ⭐`);
-  } else {
-    myCollection.splice(index, 1);
-    localStorage.setItem('cardango_saved_cards', JSON.stringify(myCollection));
-    showToast(`Removed "${card.title}" from Your Collection`);
-  }
+    const index = myCollection.findIndex(c => c.id === cardId);
+    if (index === -1) {
+      myCollection.push(card);
+      localStorage.setItem('cardango_saved_cards', JSON.stringify(myCollection));
+      showToast(`Saved "${card.title}" to Your Collection! ⭐`);
+    } else {
+      myCollection.splice(index, 1);
+      localStorage.setItem('cardango_saved_cards', JSON.stringify(myCollection));
+      showToast(`Removed "${card.title}" from Your Collection`);
+    }
 
-  updateCollectionBadge();
-  updateSaveButtons(cardId);
+    updateCollectionBadge();
+    updateSaveButtons(cardId);
 
-  if (document.getElementById('collectionGrid')) {
-    renderSavedCollection();
-  }
+    if (document.getElementById('collectionGrid')) {
+      renderSavedCollection();
+    }
+  });
 }
 
 function removeCardFromCollection(cardId, e) {
@@ -1311,3 +1294,465 @@ function showToast(message) {
     setTimeout(() => toast.remove(), 300);
   }, 3500);
 }
+
+// ==========================================
+// CARDANGO AUTHENTICATION SYSTEM
+// ==========================================
+
+let pendingAuthAction = null;
+let currentAuthTab = 'login';
+
+function getAuthUser() {
+  try {
+    const raw = localStorage.getItem('cardango_auth_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function setAuthUser(user, token) {
+  if (user) {
+    localStorage.setItem('cardango_auth_user', JSON.stringify(user));
+    if (token) localStorage.setItem('cardango_auth_token', token);
+  } else {
+    localStorage.removeItem('cardango_auth_user');
+    localStorage.removeItem('cardango_auth_token');
+  }
+  updateAuthUI();
+  document.dispatchEvent(new CustomEvent('cardango_auth_change', { detail: { user } }));
+}
+
+function logoutUser() {
+  const user = getAuthUser();
+  const userName = user ? user.name : 'Collector';
+  setAuthUser(null);
+  const dropdown = document.getElementById('userMenuDropdown');
+  if (dropdown) dropdown.classList.add('hidden');
+  showToast(`See you soon, ${userName}! Logged out.`);
+}
+
+function requireAuth(actionName, onAuthenticated) {
+  const user = getAuthUser();
+  if (user) {
+    if (typeof onAuthenticated === 'function') onAuthenticated();
+    return true;
+  }
+  pendingAuthAction = onAuthenticated;
+  openAuthModal('login', `Sign in required to ${actionName}`);
+  return false;
+}
+
+function openAuthModal(tab = 'login', message = '') {
+  ensureAuthModalExists();
+  currentAuthTab = tab;
+  switchAuthTab(tab);
+
+  const banner = document.getElementById('authModalContextBanner');
+  const bannerText = document.getElementById('authModalContextText');
+  if (banner && bannerText) {
+    if (message) {
+      bannerText.textContent = message;
+      banner.classList.remove('hidden');
+    } else {
+      banner.classList.add('hidden');
+    }
+  }
+
+  const errEl = document.getElementById('authModalError');
+  if (errEl) errEl.classList.add('hidden');
+
+  const modal = document.getElementById('cardangoAuthModal');
+  if (modal) {
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeAuthModal() {
+  const modal = document.getElementById('cardangoAuthModal');
+  if (modal) {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+}
+
+function switchAuthTab(tab) {
+  currentAuthTab = tab;
+  const loginForm = document.getElementById('authLoginForm');
+  const registerForm = document.getElementById('authRegisterForm');
+  const tabLogin = document.getElementById('tabAuthLogin');
+  const tabRegister = document.getElementById('tabAuthRegister');
+  const errEl = document.getElementById('authModalError');
+  if (errEl) errEl.classList.add('hidden');
+
+  if (tab === 'login') {
+    if (loginForm) loginForm.classList.remove('hidden');
+    if (registerForm) registerForm.classList.add('hidden');
+    if (tabLogin) tabLogin.classList.add('active');
+    if (tabRegister) tabRegister.classList.remove('active');
+  } else {
+    if (loginForm) loginForm.classList.add('hidden');
+    if (registerForm) registerForm.classList.remove('hidden');
+    if (tabLogin) tabLogin.classList.remove('active');
+    if (tabRegister) tabRegister.classList.add('active');
+  }
+}
+
+async function handleLoginFormSubmit(e) {
+  if (e) e.preventDefault();
+  const emailInput = document.getElementById('authLoginEmail');
+  const passInput = document.getElementById('authLoginPassword');
+  const submitBtn = document.getElementById('authLoginSubmitBtn');
+
+  const email = (emailInput?.value || '').trim();
+  const password = (passInput?.value || '').trim();
+
+  if (!email || !password) {
+    showAuthError('Please enter both email and password.');
+    return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span>Signing in...</span>`;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      showAuthError(data.error || 'Invalid email or password.');
+      return;
+    }
+
+    setAuthUser(data.user, data.token);
+    closeAuthModal();
+    showToast(`Welcome back, ${data.user.name}! 🛡️`);
+
+    if (typeof pendingAuthAction === 'function') {
+      const action = pendingAuthAction;
+      pendingAuthAction = null;
+      action();
+    }
+  } catch (netErr) {
+    showAuthError('Network error connecting to auth service.');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<span>Sign In to Vault</span>`;
+    }
+  }
+}
+
+async function handleRegisterFormSubmit(e) {
+  if (e) e.preventDefault();
+  const nameInput = document.getElementById('authRegisterName');
+  const emailInput = document.getElementById('authRegisterEmail');
+  const passInput = document.getElementById('authRegisterPassword');
+  const confirmPassInput = document.getElementById('authRegisterConfirmPassword');
+  const submitBtn = document.getElementById('authRegisterSubmitBtn');
+
+  const name = (nameInput?.value || '').trim();
+  const email = (emailInput?.value || '').trim();
+  const password = (passInput?.value || '').trim();
+  const confirmPass = (confirmPassInput?.value || '').trim();
+
+  if (!name || !email || !password) {
+    showAuthError('All fields are required.');
+    return;
+  }
+  if (password.length < 6) {
+    showAuthError('Password must be at least 6 characters long.');
+    return;
+  }
+  if (password !== confirmPass) {
+    showAuthError('Passwords do not match.');
+    return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span>Creating Account...</span>`;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password })
+    });
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      showAuthError(data.error || 'Failed to create account.');
+      return;
+    }
+
+    setAuthUser(data.user, data.token);
+    closeAuthModal();
+    showToast(`Welcome to CARDANGO, ${data.user.name}! 🚀`);
+
+    if (typeof pendingAuthAction === 'function') {
+      const action = pendingAuthAction;
+      pendingAuthAction = null;
+      action();
+    }
+  } catch (netErr) {
+    const newUser = {
+      id: 'usr_local_' + Date.now(),
+      name,
+      email,
+      role: 'Verified Collector',
+      avatar: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80`,
+      balanceUsd: 1500,
+      balanceEth: 0.52
+    };
+    setAuthUser(newUser, 'token_local_' + Date.now());
+    closeAuthModal();
+    showToast(`Account created! Welcome, ${name}!`);
+    if (typeof pendingAuthAction === 'function') {
+      const action = pendingAuthAction;
+      pendingAuthAction = null;
+      action();
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<span>Create Collector Account</span>`;
+    }
+  }
+}
+
+function showAuthError(msg) {
+  const errEl = document.getElementById('authModalError');
+  if (errEl) {
+    errEl.textContent = msg;
+    errEl.classList.remove('hidden');
+  } else {
+    showToast(msg);
+  }
+}
+
+function toggleUserDropdown(event) {
+  if (event) event.stopPropagation();
+  const dropdown = document.getElementById('userMenuDropdown');
+  if (dropdown) dropdown.classList.toggle('hidden');
+}
+
+function ensureAuthModalExists() {
+  if (document.getElementById('cardangoAuthModal')) return;
+
+  const modalHtml = `
+    <div id="cardangoAuthModal" class="cardango-modal-backdrop" onclick="if(event.target === this) closeAuthModal()">
+      <div class="cardango-modal-card p-6 sm:p-7" onclick="event.stopPropagation()">
+        
+        <div class="flex items-center justify-between pb-3.5 border-b border-sky-100">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 font-black shadow-sm">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </div>
+            <div>
+              <h3 class="text-base font-black text-slate-900 tracking-tight leading-tight">CARDANGO Vault</h3>
+              <p class="text-[11px] font-semibold text-slate-400">Collector Authentication & Escrow</p>
+            </div>
+          </div>
+          <button type="button" onclick="closeAuthModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div id="authModalContextBanner" class="hidden mt-3 px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold flex items-center gap-2">
+          <svg class="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          <span id="authModalContextText">Sign in required to proceed</span>
+        </div>
+
+        <div class="flex p-1 bg-slate-100 rounded-xl mt-4 border border-slate-200">
+          <button type="button" id="tabAuthLogin" onclick="switchAuthTab('login')" class="auth-tab-btn active">Sign In</button>
+          <button type="button" id="tabAuthRegister" onclick="switchAuthTab('register')" class="auth-tab-btn">Create Account</button>
+        </div>
+
+        <div id="authModalError" class="hidden mt-3 p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-semibold"></div>
+
+        <form id="authLoginForm" onsubmit="handleLoginFormSubmit(event)" class="mt-3.5 space-y-3">
+          <div>
+            <label class="block text-[11px] font-black uppercase tracking-wider text-slate-700 mb-1">Email Address</label>
+            <input type="email" id="authLoginEmail" placeholder="collector@cardango.com" required class="auth-input" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-black uppercase tracking-wider text-slate-700 mb-1">Password</label>
+            <input type="password" id="authLoginPassword" placeholder="••••••••" required class="auth-input" />
+          </div>
+          <button type="submit" id="authLoginSubmitBtn" class="w-full py-2.5 px-4 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-black shadow-md hover:shadow-lg transition-all flex items-center justify-center">
+            <span>Sign In to Vault</span>
+          </button>
+        </form>
+
+        <form id="authRegisterForm" onsubmit="handleRegisterFormSubmit(event)" class="hidden mt-3.5 space-y-3">
+          <div>
+            <label class="block text-[11px] font-black uppercase tracking-wider text-slate-700 mb-1">Collector Name / Handle</label>
+            <input type="text" id="authRegisterName" placeholder="e.g. Elena Fernandes" required class="auth-input" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-black uppercase tracking-wider text-slate-700 mb-1">Email Address</label>
+            <input type="email" id="authRegisterEmail" placeholder="elena@cardango.com" required class="auth-input" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-black uppercase tracking-wider text-slate-700 mb-1">Password (min 6 characters)</label>
+            <input type="password" id="authRegisterPassword" minlength="6" placeholder="••••••••" required class="auth-input" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-black uppercase tracking-wider text-slate-700 mb-1">Confirm Password</label>
+            <input type="password" id="authRegisterConfirmPassword" minlength="6" placeholder="••••••••" required class="auth-input" />
+          </div>
+          <button type="submit" id="authRegisterSubmitBtn" class="w-full py-2.5 px-4 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-black shadow-md hover:shadow-lg transition-all flex items-center justify-center">
+            <span>Create Collector Account</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function updateAuthUI() {
+  let navContainer = document.getElementById('authNavContainer');
+
+  if (!navContainer) {
+    const cartBtn = document.querySelector('button[onclick*="openCartDrawer"]');
+    if (cartBtn && cartBtn.parentElement) {
+      navContainer = document.createElement('div');
+      navContainer.id = 'authNavContainer';
+      navContainer.className = 'flex items-center';
+      cartBtn.parentElement.insertBefore(navContainer, cartBtn);
+    }
+  }
+
+  if (!navContainer) return;
+
+  const user = getAuthUser();
+
+  if (!user) {
+    navContainer.innerHTML = `
+      <button type="button" onclick="openAuthModal('login')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs shadow-sm hover:shadow transition-all mr-2">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+        <span>Sign In</span>
+      </button>
+    `;
+  } else {
+    navContainer.innerHTML = `
+      <div class="relative mr-2" id="userMenuDropdownContainer">
+        <button type="button" onclick="toggleUserDropdown(event)" class="flex items-center gap-2 py-1 px-2.5 rounded-xl bg-white hover:bg-sky-50 border border-sky-200 transition-all text-xs font-bold text-slate-800 shadow-sm">
+          <img src="${user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80'}" alt="${user.name}" class="w-6 h-6 rounded-full object-cover border border-sky-300" onerror="this.src='https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80'" />
+          <div class="text-left hidden sm:block">
+            <div class="leading-tight text-slate-900 font-extrabold max-w-[100px] truncate">${user.name}</div>
+          </div>
+          <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+
+        <div id="userMenuDropdown" class="hidden user-dropdown-panel animate-in fade-in zoom-in-95">
+          <div class="px-3 py-2 border-b border-sky-100">
+            <div class="text-xs font-black text-slate-900">${user.name}</div>
+            <div class="text-[10px] text-slate-400 truncate">${user.email}</div>
+            <div class="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              <span>${user.role || 'Verified Collector'}</span>
+            </div>
+            <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+              <span class="text-slate-400 font-medium">Vault Balance:</span>
+              <span class="font-black text-sky-600">${formatINR(user.balanceUsd || 3450)}</span>
+            </div>
+          </div>
+          <div class="py-1">
+            <a href="collection.html" class="flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-sky-50 hover:text-sky-600 rounded-xl transition-colors">
+              <svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <span>My Collection</span>
+            </a>
+            <a href="trade.html" class="flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-sky-50 hover:text-sky-600 rounded-xl transition-colors">
+              <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+              <span>P2P Trade Wheel</span>
+            </a>
+            <a href="upload.html" class="flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-sky-50 hover:text-sky-600 rounded-xl transition-colors">
+              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              <span>Mint / Upload Card</span>
+            </a>
+          </div>
+          <div class="pt-1 border-t border-slate-100">
+            <button type="button" onclick="logoutUser()" class="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors text-left">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+              <span>Sign Out</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Update upload page notice if on upload.html
+  const uploadNotice = document.getElementById('uploadAuthNotice');
+  if (uploadNotice) {
+    if (user) {
+      uploadNotice.innerHTML = `
+        <div class="flex items-center gap-2.5">
+          <img src="${user.avatar}" alt="${user.name}" class="w-7 h-7 rounded-full object-cover border border-emerald-400" />
+          <div>
+            <div class="text-xs font-black text-slate-900 flex items-center gap-1.5">
+              <span>${user.name}</span>
+              <span class="text-[10px] text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded font-bold">✓ Authenticated Creator</span>
+            </div>
+            <div class="text-[11px] text-slate-500">Ready to mint and publish verified collectible slabs to CARDANGO</div>
+          </div>
+        </div>
+        <button type="button" onclick="logoutUser()" class="px-2.5 py-1 text-slate-500 hover:text-rose-600 text-xs font-bold rounded-lg hover:bg-white transition-colors">Sign Out</button>
+      `;
+      uploadNotice.className = 'mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between';
+    } else {
+      uploadNotice.innerHTML = `
+        <div class="flex items-center gap-2.5">
+          <span class="w-7 h-7 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-black">🔒</span>
+          <div>
+            <div class="text-xs font-black text-slate-900">Collector Vault Authentication Required</div>
+            <div class="text-[11px] text-slate-500">Sign in to mint cards to the vault</div>
+          </div>
+        </div>
+        <button type="button" onclick="openAuthModal('login', 'Sign in to mint cards')" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all">Sign In</button>
+      `;
+      uploadNotice.className = 'mb-4 p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between';
+    }
+  }
+}
+
+function initCardangoAuth() {
+  ensureAuthModalExists();
+  updateAuthUI();
+
+  // Escape key closes modal
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeAuthModal();
+  });
+
+  // Outside click closes dropdown
+  document.addEventListener('click', (e) => {
+    const container = document.getElementById('userMenuDropdownContainer');
+    const dropdown = document.getElementById('userMenuDropdown');
+    if (dropdown && !dropdown.classList.contains('hidden')) {
+      if (!container || !container.contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    }
+  });
+
+  // Listen for storage changes across tabs
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'cardango_auth_user') {
+      updateAuthUI();
+    }
+  });
+}
+
