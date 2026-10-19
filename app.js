@@ -1728,22 +1728,45 @@ function updateAuthUI() {
   }
 }
 
+function toggleMobileNavMenu(e) {
+  if (e) {
+    e.stopPropagation();
+    e.preventDefault();
+  }
+  const dropdown = document.getElementById('mobileNavDropdown');
+  if (dropdown) {
+    dropdown.classList.toggle('hidden');
+  }
+}
+
 function initCardangoAuth() {
   ensureAuthModalExists();
   updateAuthUI();
 
   // Escape key closes modal
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeAuthModal();
+    if (e.key === 'Escape') {
+      closeAuthModal();
+      const mobileMenu = document.getElementById('mobileNavDropdown');
+      if (mobileMenu) mobileMenu.classList.add('hidden');
+    }
   });
 
-  // Outside click closes dropdown
+  // Outside click closes dropdowns
   document.addEventListener('click', (e) => {
     const container = document.getElementById('userMenuDropdownContainer');
     const dropdown = document.getElementById('userMenuDropdown');
     if (dropdown && !dropdown.classList.contains('hidden')) {
       if (!container || !container.contains(e.target)) {
         dropdown.classList.add('hidden');
+      }
+    }
+
+    const mobileMenu = document.getElementById('mobileNavDropdown');
+    const mobileBtn = document.getElementById('mobileNavMenuBtn');
+    if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+      if (!mobileMenu.contains(e.target) && (!mobileBtn || !mobileBtn.contains(e.target))) {
+        mobileMenu.classList.add('hidden');
       }
     }
   });
@@ -1755,4 +1778,5 @@ function initCardangoAuth() {
     }
   });
 }
+
 
