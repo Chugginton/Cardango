@@ -162,6 +162,13 @@ const server = http.createServer(async (req, res) => {
 
   // ==================== AUTHENTICATION API ROUTES ====================
 
+  // GET /api/health - Health check endpoint for Render
+  if (req.method === 'GET' && (pathname === '/api/health' || pathname === '/health')) {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok', uptime: process.uptime(), timestamp: new Date().toISOString() }));
+    return;
+  }
+
   // POST /api/auth/register - Register new collector account
   if (req.method === 'POST' && pathname === '/api/auth/register') {
     let body = '';
@@ -561,5 +568,14 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
+  console.log(`  CARDANGO Server running on port ${PORT}`);
   console.log(`  Local URL:   http://localhost:${PORT}`);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err.message);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled Promise Rejection:', reason);
 });
