@@ -294,40 +294,10 @@ let searchQuery = '';
 let myCollection = readLocalJSON('cardango_saved_cards', []);
 if (!Array.isArray(myCollection)) myCollection = [];
 
+// Purge any legacy localStorage card caches so Supabase database is the sole single source of truth
 try {
-  let uploadedCards = readLocalJSON('cardango_uploaded_cards', []);
-  if (Array.isArray(uploadedCards) && uploadedCards.length > 0) {
-    // 1. Deduplicate by title (case-insensitive) & category: keep only 1 instance
-    const seenMap = new Set();
-    const cleanUploaded = [];
-    uploadedCards.forEach(card => {
-      if (!card || !card.title) return;
-      const key = `${card.title.toLowerCase().trim()}_${card.category || ''}`;
-      if (!seenMap.has(key)) {
-        seenMap.add(key);
-        cleanUploaded.push(card);
-      }
-    });
-
-    // If duplicates existed in localStorage, immediately overwrite with the cleaned list
-    if (cleanUploaded.length !== uploadedCards.length) {
-      try {
-        localStorage.setItem('cardango_uploaded_cards', JSON.stringify(cleanUploaded));
-      } catch (e) {}
-      uploadedCards = cleanUploaded;
-    }
-
-    // 2. Add to CARDS_DATA without creating duplicate cards by title
-    uploadedCards.forEach(card => {
-      card.image = normalizeCardImage(card.image || card.image_url);
-      const cleanTitle = (card.title || '').toLowerCase().trim();
-      const alreadyPresent = CARDS_DATA.some(c => 
-        c.id === card.id || (c.title && c.title.toLowerCase().trim() === cleanTitle)
-      );
-      if (!alreadyPresent) {
-        CARDS_DATA.unshift(card);
-      }
-    });
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem('cardango_uploaded_cards');
   }
 } catch (e) {}
 
@@ -345,9 +315,6 @@ async function syncCardsWithBackend() {
     if (res.ok) {
       const dbCards = await res.json();
       if (Array.isArray(dbCards) && dbCards.length > 0) {
-        const localUploaded = readLocalJSON('cardango_uploaded_cards', []);
-        const uploadedIds = new Set((Array.isArray(localUploaded) ? localUploaded : []).map(u => u && u.id));
-
         dbCards.forEach(dbCard => {
           const style = CATEGORY_STYLE_MAP[dbCard.category] || {
             badgeColor: 'bg-black-100 text-sky-800 border-black-300',
@@ -365,7 +332,8 @@ async function syncCardsWithBackend() {
             image: normalizeCardImage(dbCard.image_url || dbCard.image),
             badgeColor: style.badgeColor,
             cardAccent: style.cardAccent,
-            description: dbCard.description || 'Authentic collectible slab.'
+            description: dbCard.description || 'Authentic collectible slab.',
+            isDatabaseCard: true
           };
           const cleanDbTitle = (formatted.title || '').toLowerCase().trim();
           const existingIdx = CARDS_DATA.findIndex(c => 
@@ -373,11 +341,9 @@ async function syncCardsWithBackend() {
             (c.title && c.title.toLowerCase().trim() === cleanDbTitle)
           );
           if (existingIdx !== -1) {
-            if (!uploadedIds.has(formatted.id)) {
-              CARDS_DATA[existingIdx] = formatted;
-            }
+            CARDS_DATA[existingIdx] = formatted;
           } else {
-            CARDS_DATA.push(formatted);
+            CARDS_DATA.unshift(formatted);
           }
         });
         if (document.getElementById('marketplaceGrid')) {
@@ -386,7 +352,7 @@ async function syncCardsWithBackend() {
       }
     }
   } catch (err) {
-    // Offline mode, CARDS_DATA and localStorage are active
+    // Supabase API connection notice
   }
 }
 
@@ -737,9 +703,7 @@ function openCardInspectModal(cardId) {
           </div>
 
           ${(() => {
-            const isCustomCard = readLocalJSON('cardango_uploaded_cards', []).some(u => 
-              u && (u.id === card.id || (u.title && card.title && u.title.toLowerCase().trim() === card.title.toLowerCase().trim()))
-            );
+            const isCustomCard = card.isDatabaseCard || card.id > 22 || card.id === 1;
             if (!isCustomCard) return '';
             const safeTitle = (card.title || '').replace(/'/g, "\\'");
             return `
@@ -776,13 +740,10 @@ async function deleteCustomCard(cardId, cardTitle) {
     return;
   }
   const cleanTitle = (cardTitle || '').toLowerCase().trim();
-  // 1. Remove from localStorage 'cardango_uploaded_cards'
+  
+  // 1. Clear any legacy local storage card cache
   try {
-    let customCards = readLocalJSON('cardango_uploaded_cards', []);
-    customCards = customCards.filter(c => 
-      c.id !== cardId && !(c.title && c.title.toLowerCase().trim() === cleanTitle)
-    );
-    localStorage.setItem('cardango_uploaded_cards', JSON.stringify(customCards));
+    localStorage.removeItem('cardango_uploaded_cards');
   } catch (e) {}
 
   // 2. Remove from CARDS_DATA
@@ -801,7 +762,7 @@ async function deleteCustomCard(cardId, cardTitle) {
   updateCartBadge();
   updateCollectionBadge();
 
-  // 4. Try backend deletion if available
+  // 4. Delete directly from Supabase Database via API
   try {
     fetch(`${API_BASE}/api/cards/${cardId}`, { method: 'DELETE' });
     fetch(`${API_BASE}/api/cards/delete-by-title`, {

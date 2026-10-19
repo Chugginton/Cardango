@@ -708,98 +708,35 @@
         const esc = s => String(s || '').replace(/'/g, "''");
         const sqlInsert = `\n-- Uploaded Card: ${esc(newCard.title)}\nINSERT INTO cards (title, category, price_usd, price_eth, image_url, is_in_carousel, is_spotlight, description)\nVALUES ('${esc(newCard.title)}', '${esc(newCard.category)}', ${newCard.price.toFixed(2)}, ${newCard.priceEth.toFixed(4)}, '${esc(newCard.image)}', ${newCard.is_in_carousel ? 'TRUE' : 'FALSE'}, ${newCard.is_spotlight ? 'TRUE' : 'FALSE'}, '${esc(newCard.description)}');\n`;
 
-        // 2. Try sending to backend API (which automatically appends to schema.sql and PostgreSQL)
-        let backendSaved = false;
-        try {
-          const res = await fetch(`${API_BASE}/api/cards`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              title: newCard.title,
-              category: newCard.category,
-              price_usd: newCard.price,
-              price_eth: newCard.priceEth,
-              image_url: newCard.image,
-              is_in_carousel: newCard.is_in_carousel,
-              is_spotlight: newCard.is_spotlight,
-              description: newCard.description
-            })
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.card) {
-              if (data.card.id) newCard.id = data.card.id;
-              if (data.card.image_url) newCard.image = normalizeCardImage(data.card.image_url);
-            }
-            backendSaved = true;
-          }
-        } catch (networkErr) {
-          console.warn('Backend server /api/cards unreachable, falling back to local storage');
-        }
-
-        // If backend was not reached via /api/cards, attempt /api/save-sql as fallback
-        if (!backendSaved) {
-          try {
-            await fetch(`${API_BASE}/api/save-sql`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ sql: sqlInsert })
-            });
-          } catch (e) {}
-        }
-
-        // 3. Save to Local Storage with strict duplicate prevention
-        const catStyleMap = {
-          pokemon: { badgeColor: 'bg-amber-100 text-amber-800 border-amber-300', cardAccent: 'border-amber-500' },
-          anime: { badgeColor: 'bg-purple-100 text-purple-800 border-purple-300', cardAccent: 'border-purple-500' },
-          football: { badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300', cardAccent: 'border-emerald-500' },
-          cricket: { badgeColor: 'bg-sky-100 text-sky-800 border-sky-300', cardAccent: 'border-sky-500' },
-          dev: { badgeColor: 'bg-indigo-100 text-indigo-800 border-indigo-300', cardAccent: 'border-indigo-500' }
-        };
-        const catStyle = catStyleMap[newCard.category] || { badgeColor: 'bg-sky-100 text-sky-800 border-sky-300', cardAccent: 'border-sky-500' };
-
-        let customCards = JSON.parse(localStorage.getItem('cardango_uploaded_cards') || '[]');
-        if (!newCard.id) newCard.id = Date.now();
-        newCard.categoryLabel = (newCard.category || 'DEV').toUpperCase() + ' CARD';
-        newCard.badgeColor = catStyle.badgeColor;
-        newCard.cardAccent = catStyle.cardAccent;
-        newCard.image = normalizeCardImage(newCard.image);
-
-        // Deduplicate: check if a card with the same title and category exists
-        const cleanTitle = newCard.title.toLowerCase().trim();
-        const existingIdx = customCards.findIndex(c => 
-          (newCard.id && c.id === newCard.id) ||
-          (c.title && c.title.toLowerCase().trim() === cleanTitle && c.category === newCard.category)
-        );
-
-        if (existingIdx !== -1) {
-          customCards[existingIdx] = { ...customCards[existingIdx], ...newCard };
-        } else {
-          customCards.unshift(newCard);
-        }
-
-        // Prune any legacy duplicates in storage
-        const seenKeys = new Set();
-        customCards = customCards.filter(c => {
-          if (!c || !c.title) return false;
-          const k = `${c.title.toLowerCase().trim()}_${c.category || ''}`;
-          if (seenKeys.has(k)) return false;
-          seenKeys.add(k);
-          return true;
+        // 2. Save directly to Supabase Database via API
+        const res = await fetch(`${API_BASE}/api/cards`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: newCard.title,
+            category: newCard.category,
+            price_usd: newCard.price,
+            price_eth: newCard.priceEth,
+            image_url: newCard.image,
+            is_in_carousel: newCard.is_in_carousel,
+            is_spotlight: newCard.is_spotlight,
+            description: newCard.description
+          })
         });
 
-        try {
-          localStorage.setItem('cardango_uploaded_cards', JSON.stringify(customCards));
-        } catch (storageErr) {
-          try {
-            const trimmed = customCards.slice(0, 5);
-            localStorage.setItem('cardango_uploaded_cards', JSON.stringify(trimmed));
-          } catch (e) {
-            console.warn('LocalStorage quota limit reached, stored in current session');
-          }
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'Failed to save card to database');
         }
 
-        showToast(`Successfully published "${newCard.title}"! 🎉`);
+        const data = await res.json();
+        
+        // Remove any legacy cardango_uploaded_cards from localStorage so no local cache lingers
+        try {
+          localStorage.removeItem('cardango_uploaded_cards');
+        } catch (e) {}
+
+        showToast(`Successfully published "${newCard.title}" to vault database! 🎉`);
 
         // Redirect to marketplace catalog
         setTimeout(() => {
