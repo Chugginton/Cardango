@@ -179,7 +179,7 @@ const server = http.createServer(async (req, res) => {
         const name = (payload.name || '').trim();
         const email = (payload.email || '').trim().toLowerCase();
         const password = (payload.password || '').trim();
-        const avatar = payload.avatar || `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80`;
+        const avatar = payload.avatar || ``;
 
         if (!name || !email || !password) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -237,7 +237,6 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // POST /api/auth/login - Log in collector account
   if (req.method === 'POST' && pathname === '/api/auth/login') {
     let body = '';
     req.on('data', chunk => { body += chunk; });
@@ -263,7 +262,7 @@ const server = http.createServer(async (req, res) => {
               name: data.user.user_metadata?.name || email.split('@')[0],
               email: data.user.email,
               role: data.user.user_metadata?.role || 'Verified Collector',
-              avatar: data.user.user_metadata?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+              avatar: data.user.user_metadata?.avatar || '',
               balanceUsd: 2500,
               balanceEth: 0.95
             };
@@ -492,6 +491,20 @@ const server = http.createServer(async (req, res) => {
           description: String(cardData.description || 'Authentic collectible slab.').trim()
         };
 
+        // Check if card with same title and category already exists in Supabase
+        const { data: existingCards } = await supabase
+          .from('cards')
+          .select('*')
+          .ilike('title', newCard.title)
+          .eq('category', newCard.category)
+          .limit(1);
+
+        if (existingCards && existingCards.length > 0) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, card: existingCards[0], duplicatePrevented: true }));
+          return;
+        }
+
         const { data, error } = await supabase
           .from('cards')
           .insert([newCard])
@@ -513,7 +526,49 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 5. GET /api/export-sql - Generate SQL INSERTs directly from Supabase
+  // 5. DELETE /api/cards/:id - Delete card from Supabase
+  if (req.method === 'DELETE' && pathname.startsWith('/api/cards/')) {
+    const cardId = pathname.replace('/api/cards/', '').trim();
+    if (cardId) {
+      try {
+        const { error } = await supabase.from('cards').delete().eq('id', cardId);
+        if (error) throw error;
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, deletedId: cardId }));
+        return;
+      } catch (delErr) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: delErr.message }));
+        return;
+      }
+    }
+  }
+
+  // 6. POST /api/cards/delete-by-title - Delete duplicate cards by title
+  if (req.method === 'POST' && pathname === '/api/cards/delete-by-title') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', async () => {
+      try {
+        const { title } = JSON.parse(body || '{}');
+        if (!title) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Title required' }));
+          return;
+        }
+        const { data, error } = await supabase.from('cards').delete().ilike('title', title.trim()).select();
+        if (error) throw error;
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, deleted: data }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // 7. GET /api/export-sql - Generate SQL INSERTs directly from Supabase
   if (req.method === 'GET' && pathname === '/api/export-sql') {
     try {
       const { data: rows, error } = await supabase

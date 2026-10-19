@@ -295,11 +295,36 @@ let myCollection = readLocalJSON('cardango_saved_cards', []);
 if (!Array.isArray(myCollection)) myCollection = [];
 
 try {
-  const uploadedCards = readLocalJSON('cardango_uploaded_cards', []);
+  let uploadedCards = readLocalJSON('cardango_uploaded_cards', []);
   if (Array.isArray(uploadedCards) && uploadedCards.length > 0) {
+    // 1. Deduplicate by title (case-insensitive) & category: keep only 1 instance
+    const seenMap = new Set();
+    const cleanUploaded = [];
+    uploadedCards.forEach(card => {
+      if (!card || !card.title) return;
+      const key = `${card.title.toLowerCase().trim()}_${card.category || ''}`;
+      if (!seenMap.has(key)) {
+        seenMap.add(key);
+        cleanUploaded.push(card);
+      }
+    });
+
+    // If duplicates existed in localStorage, immediately overwrite with the cleaned list
+    if (cleanUploaded.length !== uploadedCards.length) {
+      try {
+        localStorage.setItem('cardango_uploaded_cards', JSON.stringify(cleanUploaded));
+      } catch (e) {}
+      uploadedCards = cleanUploaded;
+    }
+
+    // 2. Add to CARDS_DATA without creating duplicate cards by title
     uploadedCards.forEach(card => {
       card.image = normalizeCardImage(card.image || card.image_url);
-      if (!CARDS_DATA.some(c => c.id === card.id)) {
+      const cleanTitle = (card.title || '').toLowerCase().trim();
+      const alreadyPresent = CARDS_DATA.some(c => 
+        c.id === card.id || (c.title && c.title.toLowerCase().trim() === cleanTitle)
+      );
+      if (!alreadyPresent) {
         CARDS_DATA.unshift(card);
       }
     });
@@ -342,7 +367,11 @@ async function syncCardsWithBackend() {
             cardAccent: style.cardAccent,
             description: dbCard.description || 'Authentic collectible slab.'
           };
-          const existingIdx = CARDS_DATA.findIndex(c => c.id === formatted.id);
+          const cleanDbTitle = (formatted.title || '').toLowerCase().trim();
+          const existingIdx = CARDS_DATA.findIndex(c => 
+            c.id === formatted.id || 
+            (c.title && c.title.toLowerCase().trim() === cleanDbTitle)
+          );
           if (existingIdx !== -1) {
             if (!uploadedIds.has(formatted.id)) {
               CARDS_DATA[existingIdx] = formatted;
@@ -706,6 +735,22 @@ function openCardInspectModal(cardId) {
               <span>${isCardSaved(card.id) ? 'Saved' : 'Save'}</span>
             </button>
           </div>
+
+          ${(() => {
+            const isCustomCard = readLocalJSON('cardango_uploaded_cards', []).some(u => 
+              u && (u.id === card.id || (u.title && card.title && u.title.toLowerCase().trim() === card.title.toLowerCase().trim()))
+            );
+            if (!isCustomCard) return '';
+            const safeTitle = (card.title || '').replace(/'/g, "\\'");
+            return `
+              <div class="pt-2 flex justify-end">
+                <button type="button" onclick="deleteCustomCard(${card.id}, '${safeTitle}')" class="px-3 py-1.5 text-xs font-bold text-rose-600 hover:text-white hover:bg-rose-600 border border-rose-200 rounded-xl transition-all flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                  <span>Delete Custom Card</span>
+                </button>
+              </div>
+            `;
+          })()}
         </div>
 
       </div>
@@ -724,6 +769,53 @@ function openCardInspectModal(cardId) {
 function closeCardInspectModal() {
   const modal = document.getElementById('cardInspectModal');
   if (modal) modal.remove();
+}
+
+async function deleteCustomCard(cardId, cardTitle) {
+  if (!confirm(`Are you sure you want to delete "${cardTitle || 'this card'}" from your catalog?`)) {
+    return;
+  }
+  const cleanTitle = (cardTitle || '').toLowerCase().trim();
+  // 1. Remove from localStorage 'cardango_uploaded_cards'
+  try {
+    let customCards = readLocalJSON('cardango_uploaded_cards', []);
+    customCards = customCards.filter(c => 
+      c.id !== cardId && !(c.title && c.title.toLowerCase().trim() === cleanTitle)
+    );
+    localStorage.setItem('cardango_uploaded_cards', JSON.stringify(customCards));
+  } catch (e) {}
+
+  // 2. Remove from CARDS_DATA
+  const idx = CARDS_DATA.findIndex(c => 
+    c.id === cardId || (c.title && c.title.toLowerCase().trim() === cleanTitle)
+  );
+  if (idx !== -1) {
+    CARDS_DATA.splice(idx, 1);
+  }
+
+  // 3. Remove from cart & collection if present
+  cart = cart.filter(item => item.id !== cardId);
+  try { localStorage.setItem('cardango_cart', JSON.stringify(cart)); } catch (e) {}
+  myCollection = myCollection.filter(id => id !== cardId);
+  try { localStorage.setItem('cardango_saved_cards', JSON.stringify(myCollection)); } catch (e) {}
+  updateCartBadge();
+  updateCollectionBadge();
+
+  // 4. Try backend deletion if available
+  try {
+    fetch(`${API_BASE}/api/cards/${cardId}`, { method: 'DELETE' });
+    fetch(`${API_BASE}/api/cards/delete-by-title`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: cardTitle })
+    });
+  } catch (e) {}
+
+  closeCardInspectModal();
+  if (document.getElementById('marketplaceGrid')) {
+    renderMarketplaceGrid();
+  }
+  showToast(`Deleted "${cardTitle}" from catalog`);
 }
 
 // Card Detail Loader Page

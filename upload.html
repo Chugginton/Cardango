@@ -268,7 +268,7 @@
 
             <!-- 7. Action Buttons -->
             <div class="pt-4">
-              <button type="submit" class="w-full py-3.5 px-6 bg-sky-600 hover:bg-sky-700 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+              <button type="submit" id="uploadSubmitBtn" class="w-full py-3.5 px-6 bg-sky-600 hover:bg-sky-700 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 <span>Upload & Publish Card</span>
               </button>
@@ -401,7 +401,7 @@
       <div class="pt-8 flex flex-col md:flex-row items-center justify-between text-xs text-white/80 font-medium gap-3">
         <div>© 2026 CARDANGO. All rights reserved.</div>
         <div class="flex items-center gap-4">
-          <a href="#">Privacy Policy</a>
+          <a href="#">Privacy Policy</a>  
           <span>•</span>
           <a href="#">Terms of Service</a>
           <span>•</span>
@@ -605,11 +605,18 @@
       updateLivePreview();
     }
 
+    let isUploadingCard = false;
+
     // Handle Form Submit (Upload Card to API, SQL Storage and Local Storage)
     async function handleCardUpload(e) {
       if (e) {
         e.preventDefault();
         e.stopPropagation();
+      }
+
+      if (isUploadingCard) {
+        showToast('Upload in progress... please wait a moment ⏳');
+        return;
       }
 
       if (typeof requireAuth === 'function') {
@@ -619,11 +626,28 @@
         if (!authed) return;
       }
 
+      const submitBtn = document.getElementById('uploadSubmitBtn');
+      const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+
       try {
         let imageUrl = uploadedImageDataUrl || document.getElementById('inputImageUrl').value.trim();
         if (!imageUrl) {
           showToast('Please upload an image file or enter an image URL! ⚠️');
           return;
+        }
+
+        // Lock form and display spinner
+        isUploadingCard = true;
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+          submitBtn.innerHTML = `
+            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Minting & Publishing Card... Please wait</span>
+          `;
         }
 
         // 1. If user uploaded a local image file (data:image/...), attempt upload to API
@@ -724,7 +748,7 @@
           } catch (e) {}
         }
 
-        // 3. Save to Local Storage so frontend reflects immediately on index & marketplace
+        // 3. Save to Local Storage with strict duplicate prevention
         const catStyleMap = {
           pokemon: { badgeColor: 'bg-amber-100 text-amber-800 border-amber-300', cardAccent: 'border-amber-500' },
           anime: { badgeColor: 'bg-purple-100 text-purple-800 border-purple-300', cardAccent: 'border-purple-500' },
@@ -734,19 +758,35 @@
         };
         const catStyle = catStyleMap[newCard.category] || { badgeColor: 'bg-sky-100 text-sky-800 border-sky-300', cardAccent: 'border-sky-500' };
 
-        const customCards = JSON.parse(localStorage.getItem('cardango_uploaded_cards') || '[]');
+        let customCards = JSON.parse(localStorage.getItem('cardango_uploaded_cards') || '[]');
         if (!newCard.id) newCard.id = Date.now();
         newCard.categoryLabel = (newCard.category || 'DEV').toUpperCase() + ' CARD';
         newCard.badgeColor = catStyle.badgeColor;
         newCard.cardAccent = catStyle.cardAccent;
         newCard.image = normalizeCardImage(newCard.image);
 
-        const existingIdx = customCards.findIndex(c => c.id === newCard.id);
+        // Deduplicate: check if a card with the same title and category exists
+        const cleanTitle = newCard.title.toLowerCase().trim();
+        const existingIdx = customCards.findIndex(c => 
+          (newCard.id && c.id === newCard.id) ||
+          (c.title && c.title.toLowerCase().trim() === cleanTitle && c.category === newCard.category)
+        );
+
         if (existingIdx !== -1) {
-          customCards[existingIdx] = newCard;
+          customCards[existingIdx] = { ...customCards[existingIdx], ...newCard };
         } else {
           customCards.unshift(newCard);
         }
+
+        // Prune any legacy duplicates in storage
+        const seenKeys = new Set();
+        customCards = customCards.filter(c => {
+          if (!c || !c.title) return false;
+          const k = `${c.title.toLowerCase().trim()}_${c.category || ''}`;
+          if (seenKeys.has(k)) return false;
+          seenKeys.add(k);
+          return true;
+        });
 
         try {
           localStorage.setItem('cardango_uploaded_cards', JSON.stringify(customCards));
@@ -768,6 +808,12 @@
       } catch (err) {
         console.error('Upload failed:', err);
         showToast('Error uploading card: ' + err.message);
+        isUploadingCard = false;
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+          submitBtn.innerHTML = originalBtnHtml;
+        }
       }
     }
 
