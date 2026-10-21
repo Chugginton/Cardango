@@ -1,0 +1,160 @@
+/* CARDANGO - mobile fixes + footer redesign
+   Load AFTER styles.css:  <link rel="stylesheet" href="mobile-footer.css">  */
+
+/* ---------- Global mobile basics ---------- */
+html { -webkit-text-size-adjust: 100%; }
+body { min-height: 100dvh; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+img { max-width: 100%; }
+
+/* Stop sticky hover states on touch screens */
+@media (hover: none) {
+  .pure-card-slab:hover,
+  .trade-btn:hover,
+  .gbeaugonin-btn:hover { transform: none; box-shadow: inherit; border-color: inherit; }
+  .naruto-large-footer a:hover { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* ---------- Trade stack on phones ---------- */
+@media (max-width: 767px) {
+  .trade-info h1, .gbeaugonin-left-info h1 { overflow-wrap: anywhere; }
+  .trade-action-buttons, .gbeaugonin-action-buttons { width: 100%; }
+}
+@media (max-width: 380px) {
+  .trade-stack, .gbeaugonin-right-stack { width: 220px; height: 308px; }
+  .trade-stack-card.pos-prev, .gbeaugonin-stack-item.pos-prev { transform: translateY(-115px) scale(.84) rotateX(-85deg); }
+  .trade-stack-card.pos-next, .gbeaugonin-stack-item.pos-next { transform: translateY(115px) scale(.84) rotateX(85deg); }
+}
+/* Landscape phones: don't force a full-height section */
+@media (max-height: 520px) and (orientation: landscape) {
+  .trade-stack, .gbeaugonin-right-stack { width: 190px; height: 266px; }
+}
+
+/* ---------- 3D cylinder banner on phones ---------- */
+@media (max-width: 767px) {
+  .banner { height: 300px; }
+  .banner .slider { width: 110px; height: 154px; left: calc(50% - 55px); top: 18%; }
+  .banner .slider .item { transform: rotateY(calc((var(--position) - 1) * (360 / var(--quantity)) * 1deg)) translateZ(210px); }
+  .banner .content h1 { font-size: 1.9rem; letter-spacing: .08em; }
+}
+
+/* ---------- Modals / dropdown ---------- */
+.cardango-modal-card { max-height: 92dvh; overflow-y: auto; }
+.user-dropdown-panel { max-width: calc(100vw - 1.5rem); }
+
+/* ---------- Footer ---------- */
+.naruto-large-footer {
+  color: #fff;
+  padding: 3.5rem 0 calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  min-height: 0;
+  background-position: center;
+  isolation: isolate;
+}
+.naruto-large-footer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(3, 24, 43, .9) 0%, rgba(3, 24, 43, .78) 55%, rgba(3, 24, 43, .94) 100%);
+}
+
+.naruto-large-footer .brand-logo-text {
+  color: #fff;
+  font-size: 1.7rem;
+  text-shadow: none;
+}
+.naruto-large-footer .brand-tagline {
+  color: rgba(255, 255, 255, .82);
+  font-size: .95rem;
+  text-shadow: none;
+  max-width: 34ch;
+}
+.naruto-large-footer .footer-heading {
+  color: #fff;
+  font-size: .8rem;
+  text-shadow: none;
+  border-bottom: 1px solid rgba(125, 211, 252, .45);
+  display: inline-block;
+  padding-right: 1.5rem;
+}
+.naruto-large-footer a {
+  display: inline-block;
+  color: rgba(255, 255, 255, .8);
+  text-shadow: none;
+  padding: .3rem 0;
+}
+.naruto-large-footer a:hover { color: #7dd3fc; transform: translateX(3px); }
+.naruto-large-footer a:focus-visible,
+.naruto-large-footer input:focus-visible,
+.naruto-large-footer button:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 2px; }
+
+/* Social icons: bigger touch targets */
+.footer-social a {
+  width: 2.5rem; height: 2.5rem; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: .75rem;
+  border: 1px solid rgba(255, 255, 255, .25);
+  background: rgba(255, 255, 255, .08);
+  transition: background .2s, transform .2s, border-color .2s;
+}
+.footer-social a:hover { background: rgba(125, 211, 252, .25); border-color: #7dd3fc; transform: translateY(-2px); }
+.footer-social svg { width: 1.1rem; height: 1.1rem; }
+
+/* Newsletter */
+.footer-news { display: flex; gap: .5rem; max-width: 24rem; }
+.footer-news input {
+  flex: 1; min-width: 0;
+  padding: .7rem .9rem;
+  font-size: 16px; /* prevents iOS zoom-on-focus */
+  color: #fff;
+  background: rgba(255, 255, 255, .1);
+  border: 1px solid rgba(255, 255, 255, .25);
+  border-radius: .75rem;
+}
+.footer-news input::placeholder { color: rgba(255, 255, 255, .55); }
+.footer-news button {
+  padding: .7rem 1rem;
+  font-size: .8rem; font-weight: 800;
+  color: #fff; background: #0284c7;
+  border-radius: .75rem;
+  white-space: nowrap;
+  transition: background .2s;
+}
+.footer-news button:hover { background: #0369a1; }
+
+/* Trust chips */
+.footer-chip {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .35rem .7rem;
+  font-size: .72rem; font-weight: 700;
+  color: rgba(255, 255, 255, .9);
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 9999px;
+}
+
+/* Bottom bar */
+.footer-bottom { border-top: 1px solid rgba(255, 255, 255, .2); }
+.footer-bottom a { font-size: .8rem; padding: .25rem 0; }
+
+/* Back to top */
+.footer-top-btn {
+  width: 2.5rem; height: 2.5rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: .75rem;
+  background: rgba(255, 255, 255, .1);
+  border: 1px solid rgba(255, 255, 255, .25);
+  color: #fff; cursor: pointer;
+  transition: background .2s;
+}
+.footer-top-btn:hover { background: rgba(125, 211, 252, .3); }
+
+@media (max-width: 767px) {
+  .naruto-large-footer { padding-top: 2.5rem; }
+  .naruto-large-footer .brand-logo-text { font-size: 1.45rem; }
+  .footer-news { max-width: none; }
+  .footer-bottom { text-align: center; }
+}
