@@ -316,6 +316,58 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // GET /api/user/sync - Get current user's synced cart and collection
+  if (req.method === 'GET' && pathname === '/api/user/sync') {
+    const authHeader = req.headers['authorization'] || '';
+    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+
+    if (token && ACTIVE_SESSIONS.has(token)) {
+      const user = ACTIVE_SESSIONS.get(token);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: true,
+        cart: user.cart || [],
+        collection: user.collection || [],
+        orders: user.orders || []
+      }));
+      return;
+    }
+
+    res.writeHead(401, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Unauthorized' }));
+    return;
+  }
+
+  // POST /api/user/sync - Save current user's cart and collection
+  if (req.method === 'POST' && pathname === '/api/user/sync') {
+    const authHeader = req.headers['authorization'] || '';
+    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+
+    if (token && ACTIVE_SESSIONS.has(token)) {
+      const user = ACTIVE_SESSIONS.get(token);
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', () => {
+        try {
+          const payload = JSON.parse(body || '{}');
+          if (Array.isArray(payload.cart)) user.cart = payload.cart;
+          if (Array.isArray(payload.collection)) user.collection = payload.collection;
+          if (Array.isArray(payload.orders)) user.orders = payload.orders;
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true }));
+        } catch (e) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
+        }
+      });
+      return;
+    }
+
+    res.writeHead(401, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Unauthorized' }));
+    return;
+  }
+
   // POST /api/auth/logout - Terminate session
   if (req.method === 'POST' && pathname === '/api/auth/logout') {
     const authHeader = req.headers['authorization'] || '';

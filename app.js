@@ -18,9 +18,6 @@ const normalizeCardImage = (img) => {
   return img;
 };
 
-// Full Trading Cards Data Set
-
-// Main Collectibles Dataset (Duplicate Image Entries Pruned)
 const CARDS_DATA = [
   {
     id: 1,
@@ -282,7 +279,48 @@ function readLocalJSON(key, fallback) {
     return fallback;
   }
 }
-let cart = readLocalJSON('cardango_cart', []);
+function getCurrentUserScope() {
+  try {
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem('cardango_auth_user') : null;
+    if (raw) {
+      const u = JSON.parse(raw);
+      if (u && (u.id || u.email)) {
+        const idStr = String(u.id || u.email).toLowerCase().trim().replace(/[^a-z0-9_-]/g, '_');
+        return 'usr_' + idStr;
+      }
+    }
+  } catch (e) {}
+  return 'guest';
+}
+
+function getUserStorageKey(baseKey) {
+  const scope = getCurrentUserScope();
+  return baseKey + '_' + scope;
+}
+
+function getCartStorageKey() {
+  const userKey = getUserStorageKey('cardango_cart');
+  if (typeof localStorage !== 'undefined' && !localStorage.getItem(userKey)) {
+    const legacy = localStorage.getItem('cardango_cart');
+    if (legacy) {
+      try { localStorage.setItem(userKey, legacy); } catch (e) {}
+    }
+  }
+  return userKey;
+}
+
+function getCollectionStorageKey() {
+  const userKey = getUserStorageKey('cardango_saved_cards');
+  if (typeof localStorage !== 'undefined' && !localStorage.getItem(userKey)) {
+    const legacy = localStorage.getItem('cardango_saved_cards');
+    if (legacy) {
+      try { localStorage.setItem(userKey, legacy); } catch (e) {}
+    }
+  }
+  return userKey;
+}
+
+let cart = readLocalJSON(getCartStorageKey(), []);
 if (!Array.isArray(cart)) cart = [];
 let activeCategory = 'all';
 let activePriceFilter = 'all';
@@ -291,8 +329,85 @@ let activeEthFilter = 'all';
 let activeRarityFilter = 'all';
 let searchQuery = '';
 
-let myCollection = readLocalJSON('cardango_saved_cards', []);
+let myCollection = readLocalJSON(getCollectionStorageKey(), []);
 if (!Array.isArray(myCollection)) myCollection = [];
+
+function loadUserScopedData() {
+  cart = readLocalJSON(getCartStorageKey(), []);
+  if (!Array.isArray(cart)) cart = [];
+
+  myCollection = readLocalJSON(getCollectionStorageKey(), []);
+  if (!Array.isArray(myCollection)) myCollection = [];
+
+  updateCartBadge();
+  updateCollectionBadge();
+
+  if (document.getElementById('collectionGrid')) {
+    renderSavedCollection();
+  }
+  if (document.getElementById('marketplaceGrid')) {
+    renderMarketplaceGrid();
+  }
+  const cartDrawer = document.getElementById('cartDrawerModal');
+  if (cartDrawer && !cartDrawer.classList.contains('hidden')) {
+    openCartDrawer();
+  }
+
+  syncUserDataWithServer();
+}
+
+async function syncUserDataWithServer() {
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('cardango_auth_token') : null;
+  if (!token) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/user/sync`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success) {
+        let changed = false;
+        if (Array.isArray(data.cart) && data.cart.length > 0 && cart.length === 0) {
+          cart = data.cart;
+          localStorage.setItem(getCartStorageKey(), JSON.stringify(cart));
+          changed = true;
+        }
+        if (Array.isArray(data.collection) && data.collection.length > 0 && myCollection.length === 0) {
+          myCollection = data.collection;
+          localStorage.setItem(getCollectionStorageKey(), JSON.stringify(myCollection));
+          changed = true;
+        }
+        if (changed) {
+          updateCartBadge();
+          updateCollectionBadge();
+          if (document.getElementById('collectionGrid')) renderSavedCollection();
+          if (document.getElementById('marketplaceGrid')) renderMarketplaceGrid();
+        }
+      }
+    }
+  } catch (e) {}
+}
+
+async function saveUserDataToServer() {
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('cardango_auth_token') : null;
+  if (!token) return;
+
+  try {
+    await fetch(`${API_BASE}/api/user/sync`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        cart,
+        collection: myCollection
+      })
+    });
+  } catch (e) {}
+}
 
 // Purge any legacy localStorage card caches so Supabase database is the sole single source of truth
 try {
@@ -1054,8 +1169,9 @@ function addToCart(cardId) {
   if (!card) return;
 
   cart.push(card);
-  localStorage.setItem('cardango_cart', JSON.stringify(cart));
+  localStorage.setItem(getCartStorageKey(), JSON.stringify(cart));
   updateCartBadge();
+  saveUserDataToServer();
   showToast(`Added "${card.title}" to CARDANGO cart!`);
 }
 
@@ -1111,8 +1227,9 @@ function openCartDrawer() {
 
 function removeFromCart(index) {
   cart.splice(index, 1);
-  localStorage.setItem('cardango_cart', JSON.stringify(cart));
+  localStorage.setItem(getCartStorageKey(), JSON.stringify(cart));
   updateCartBadge();
+  saveUserDataToServer();
   openCartDrawer();
 }
 
@@ -1127,9 +1244,28 @@ function closeCartDrawer() {
 function checkoutCart() {
   if (cart.length === 0) return;
   showToast('Redirecting to CARDANGO Escrow Checkout...');
+  const user = getAuthUser();
+  const orderId = 'ORD-' + Date.now().toString(36).toUpperCase();
+  const orderTotal = cart.reduce((sum, item) => sum + (item.price || 0), 0);
+  const newOrder = {
+    id: orderId,
+    date: new Date().toISOString(),
+    items: [...cart],
+    totalUsd: orderTotal,
+    totalEth: (orderTotal / 2800).toFixed(4),
+    status: 'In Escrow Vault Guarantee'
+  };
+
+  const ordersKey = getUserStorageKey('cardango_orders');
+  const userOrders = readLocalJSON(ordersKey, []);
+  userOrders.unshift(newOrder);
+  try { localStorage.setItem(ordersKey, JSON.stringify(userOrders)); } catch (e) {}
+
+  showToast(`Order ${orderId} placed with Escrow Guarantee! 🎉`);
   cart = [];
-  localStorage.setItem('cardango_cart', JSON.stringify(cart));
+  localStorage.setItem(getCartStorageKey(), JSON.stringify(cart));
   updateCartBadge();
+  saveUserDataToServer();
   closeCartDrawer();
 }
 
@@ -1188,11 +1324,13 @@ function saveCardToCollection(cardId, e) {
     const index = myCollection.findIndex(c => c.id === cardId);
     if (index === -1) {
       myCollection.push(card);
-      localStorage.setItem('cardango_saved_cards', JSON.stringify(myCollection));
+      localStorage.setItem(getCollectionStorageKey(), JSON.stringify(myCollection));
+      saveUserDataToServer();
       showToast(`Saved "${card.title}" to Your Collection! ⭐`);
     } else {
       myCollection.splice(index, 1);
-      localStorage.setItem('cardango_saved_cards', JSON.stringify(myCollection));
+      localStorage.setItem(getCollectionStorageKey(), JSON.stringify(myCollection));
+      saveUserDataToServer();
       showToast(`Removed "${card.title}" from Your Collection`);
     }
 
@@ -1212,7 +1350,8 @@ function removeCardFromCollection(cardId, e) {
   }
   const card = CARDS_DATA.find(c => c.id === cardId);
   myCollection = myCollection.filter(c => c.id !== cardId);
-  localStorage.setItem('cardango_saved_cards', JSON.stringify(myCollection));
+  localStorage.setItem(getCollectionStorageKey(), JSON.stringify(myCollection));
+  saveUserDataToServer();
   if (card) {
     showToast(`Removed "${card.title}" from Your Collection`);
   }
@@ -1278,6 +1417,16 @@ function renderSavedCollection() {
 
   if (totalCountEl) totalCountEl.textContent = count;
   if (totalValueEl) totalValueEl.textContent = formatINR(totalValue);
+
+  const noticeEl = document.getElementById('collectionUserNotice');
+  if (noticeEl) {
+    const user = getAuthUser();
+    if (user) {
+      noticeEl.innerHTML = `Personal verified vault for <span class="font-extrabold text-slate-800">${user.name}</span> (${user.email}). All cards saved here belong exclusively to your account.`;
+    } else {
+      noticeEl.innerHTML = `Viewing guest collection. <button type="button" onclick="openAuthModal('login')" class="text-sky-600 font-bold underline hover:text-sky-700">Sign in</button> to preserve your collection across devices.`;
+    }
+  }
 
   if (count === 0) {
     container.innerHTML = '';
@@ -1366,12 +1515,39 @@ function getAuthUser() {
 
 function setAuthUser(user, token) {
   if (user) {
+    const guestCartKey = 'cardango_cart_guest';
+    const guestCollectionKey = 'cardango_saved_cards_guest';
+    const guestCart = readLocalJSON(guestCartKey, []);
+    const guestCollection = readLocalJSON(guestCollectionKey, []);
+
     localStorage.setItem('cardango_auth_user', JSON.stringify(user));
     if (token) localStorage.setItem('cardango_auth_token', token);
+
+    const userCartKey = getCartStorageKey();
+    const userCollKey = getCollectionStorageKey();
+    let currentUsrCart = readLocalJSON(userCartKey, []);
+    let currentUsrColl = readLocalJSON(userCollKey, []);
+
+    if (Array.isArray(guestCart) && guestCart.length > 0) {
+      guestCart.forEach(item => {
+        if (!currentUsrCart.some(c => c.id === item.id)) currentUsrCart.push(item);
+      });
+      localStorage.setItem(userCartKey, JSON.stringify(currentUsrCart));
+      localStorage.removeItem(guestCartKey);
+    }
+
+    if (Array.isArray(guestCollection) && guestCollection.length > 0) {
+      guestCollection.forEach(item => {
+        if (!currentUsrColl.some(c => c.id === item.id)) currentUsrColl.push(item);
+      });
+      localStorage.setItem(userCollKey, JSON.stringify(currentUsrColl));
+      localStorage.removeItem(guestCollectionKey);
+    }
   } else {
     localStorage.removeItem('cardango_auth_user');
     localStorage.removeItem('cardango_auth_token');
   }
+  loadUserScopedData();
   updateAuthUI();
   document.dispatchEvent(new CustomEvent('cardango_auth_change', { detail: { user } }));
 }
@@ -1720,6 +1896,14 @@ function updateAuthUI() {
             <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
               <span class="text-slate-400 font-medium">Vault Balance:</span>
               <span class="font-black text-sky-600">${formatINR(user.balanceUsd || 3450)}</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-[11px]">
+              <span class="text-slate-400 font-medium">Your Collection:</span>
+              <span class="font-bold text-amber-600">${myCollection.length} saved</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-[11px]">
+              <span class="text-slate-400 font-medium">Your Cart:</span>
+              <span class="font-bold text-sky-600">${cart.length} item${cart.length === 1 ? '' : 's'}</span>
             </div>
           </div>
           <div class="py-1">
