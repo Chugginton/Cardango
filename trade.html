@@ -75,36 +75,49 @@
   </header>
 
 
-  <!-- 3D VERTICAL STACK TRADE TERMINAL (GABRIEL BEAUGONIN STYLE) -->
-  <section class="min-h-[calc(100vh-80px)] bg-[#f4f4f6] flex flex-col justify-center relative py-12 px-4 sm:px-8">
+    <!-- 3D VERTICAL STACK TRADE TERMINAL (GABRIEL BEAUGONIN STYLE) -->
+  <section class="min-h-[calc(100vh-80px)] bg-[#f4f4f6] flex flex-col justify-center relative py-6 px-3 sm:py-12 sm:px-8 overflow-hidden">
     
-    <!-- Navigation Controls -->
-    <div class="absolute top-6 right-6 z-50 flex items-center gap-2">
-      <button onclick="prevTradeItem()" class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-sky-600 flex items-center justify-center font-bold text-sm shadow-sm hover:scale-105 transition-all" title="Previous Trade Proposal">
-        ▲
-      </button>
-      <button onclick="nextTradeItem()" class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-sky-600 flex items-center justify-center font-bold text-sm shadow-sm hover:scale-105 transition-all" title="Next Trade Proposal">
-        ▼
-      </button>
+    <!-- Top Bar: Proposal Counter & Responsive Navigation Controls -->
+    <div class="w-full max-w-6xl mx-auto flex items-center justify-between sm:justify-end gap-2 mb-2 sm:mb-6 sm:absolute sm:top-6 sm:right-6 sm:w-auto z-40">
+      <div class="flex items-center gap-1.5 text-xs font-black text-slate-700 bg-white border border-sky-100 px-3 py-1.5 sm:py-2 rounded-xl shadow-sm">
+        <span class="text-sky-600 uppercase tracking-wider text-[10px] sm:text-[11px]">PROPOSAL</span>
+        <span id="tradeCounter" class="text-slate-900 font-extrabold">1 / 8</span>
+      </div>
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <button onclick="prevTradeItem()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-sky-600 active:scale-95 flex items-center justify-center font-bold text-sm shadow-sm hover:scale-105 transition-all" title="Previous Trade Proposal">
+          ▲
+        </button>
+        <button onclick="nextTradeItem()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-sky-600 active:scale-95 flex items-center justify-center font-bold text-sm shadow-sm hover:scale-105 transition-all" title="Next Trade Proposal">
+          ▼
+        </button>
+      </div>
     </div>
 
-    <div class="trade-container max-w-6xl w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-12 relative">
+    <!-- Trade Container: Mobile-first ordering (3D Card Slab Top -> Dots -> Trade Details Bottom) -->
+    <div class="trade-container max-w-6xl w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-4 md:gap-12 relative">
       
-      <!-- Left Info Box (Card Name, Price, Trader Details) -->
-      <div id="tradeLeftInfo" class="trade-info w-full md:w-1/2">
+      <!-- Right 3D Perspective Stack Slider (order-1 on mobile, order-2 on desktop) -->
+      <div id="tradeStack" class="trade-stack order-1 md:order-2">
         <!-- Dynamically populated by app.js -->
       </div>
 
-      <!-- Right 3D Perspective Stack Slider -->
-      <div id="tradeStack" class="trade-stack">
+      <!-- Pagination Dots (order-2 on mobile, order-3 on desktop) -->
+      <div id="tradeDots" class="trade-dots order-2 md:order-3">
         <!-- Dynamically populated by app.js -->
       </div>
 
-      <!-- Vertical Pagination Dots -->
-      <div id="tradeDots" class="trade-dots">
+      <!-- Left Info Box (Card Name, Price, Trader Details - order-3 on mobile, order-1 on desktop) -->
+      <div id="tradeLeftInfo" class="trade-info w-full md:w-1/2 order-3 md:order-1">
         <!-- Dynamically populated by app.js -->
       </div>
 
+    </div>
+
+    <!-- Mobile swipe indicator hint -->
+    <div class="md:hidden text-center text-[11px] font-semibold text-slate-400 mt-2 flex items-center justify-center gap-1">
+      <svg class="w-3.5 h-3.5 text-sky-500 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
+      <span>Swipe card or use ▲ ▼ arrows to browse</span>
     </div>
   </section>
 

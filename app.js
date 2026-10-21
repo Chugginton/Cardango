@@ -514,6 +514,7 @@ function renderGabrielBeaugoninTradeSlider() {
   const stack = document.getElementById('tradeStack') || document.getElementById('gbeaugoninTradeStack');
   const leftInfo = document.getElementById('tradeLeftInfo') || document.getElementById('gbeaugoninLeftInfo');
   const dots = document.getElementById('tradeDots') || document.getElementById('gbeaugoninDots');
+  const counter = document.getElementById('tradeCounter');
 
   if (!stack) return;
 
@@ -524,48 +525,53 @@ function renderGabrielBeaugoninTradeSlider() {
 
   const currentTrade = TRADE_PROPOSALS[activeTradeIndex % TRADE_PROPOSALS.length] || TRADE_PROPOSALS[0];
 
+  // 0. Update Counter Indicator
+  if (counter) {
+    counter.textContent = `${(activeTradeIndex % TRADE_PROPOSALS.length) + 1} / ${TRADE_PROPOSALS.length}`;
+  }
+
   // 1. Update Left Info Panel (Card Name, Actual Price & Trader Info)
   if (leftInfo) {
     leftInfo.innerHTML = `
-      <div class="space-y-4">
+      <div class="space-y-3 sm:space-y-4 text-center md:text-left">
         <div class="inline-flex items-center gap-2 px-3 py-1 bg-sky-100 text-sky-800 text-xs font-black rounded-full uppercase tracking-wider border border-sky-200">
-          <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+          <span class="w-2 h-2 rounded-full bg-sky-600 animate-pulse"></span>
           <span>VERIFIED ESCROW</span>
         </div>
 
         <div>
-          <!-- Card Name at Left -->
-          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+          <!-- Card Name -->
+          <h1 class="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
             ${currentTrade.cardName}
           </h1>
           
-          <!-- Price at Left with Name -->
-          <div class="flex items-baseline gap-3 my-3">
-            <span class="text-3xl sm:text-4xl font-extrabold text-sky-600 tracking-tight">
+          <!-- Price with Name -->
+          <div class="flex items-baseline justify-center md:justify-start gap-2.5 my-2 sm:my-3">
+            <span class="text-2xl sm:text-4xl font-extrabold text-sky-600 tracking-tight">
               ${formatINR(currentTrade.cardPrice)}
             </span>
-            <span class="text-base sm:text-lg font-bold text-slate-500">
+            <span class="text-sm sm:text-lg font-bold text-slate-500">
               (${currentTrade.cardPriceEth} ETH)
             </span>
           </div>
         </div>
 
         <!-- Trader Information -->
-        <div class="flex items-center gap-3 py-2.5 px-4 bg-white rounded-2xl border border-sky-100 shadow-sm max-w-sm">
-          <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-700 font-extrabold flex items-center justify-center text-sm border border-sky-200">
+        <div class="flex items-center gap-3 py-2.5 px-4 bg-white rounded-2xl border border-sky-100 shadow-sm max-w-sm mx-auto md:mx-0 text-left">
+          <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-700 font-extrabold flex items-center justify-center text-sm border border-sky-200 flex-shrink-0">
             ${currentTrade.traderName.split(' ').map(n => n[0]).join('')}
           </div>
-          <div>
-            <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+          <div class="min-w-0">
+            <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5 truncate">
               <span>${currentTrade.traderName}</span>
-              <span class="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">✓ Verified</span>
+              <span class="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded flex-shrink-0">✓ Verified</span>
             </div>
-            <div class="text-[11px] text-slate-500 font-medium">${currentTrade.traderRole}</div>
+            <div class="text-[11px] text-slate-500 font-medium truncate">${currentTrade.traderRole}</div>
           </div>
         </div>
         
-        <div class="trade-action-buttons pt-2">
-          <button onclick="submitTradeOffer()" class="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white font-black text-xs rounded-2xl shadow-md transition-all flex items-center gap-2">
+        <div class="trade-action-buttons pt-2 justify-center md:justify-start flex-wrap gap-2">
+          <button onclick="submitTradeOffer()" class="flex-1 sm:flex-none px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white font-black text-xs rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 min-w-[150px] active:scale-95">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
             <span>Propose Swap</span>
           </button>
@@ -594,18 +600,58 @@ function renderGabrielBeaugoninTradeSlider() {
     return `
       <div onclick="setTradeIndex(${idx})" class="trade-stack-card ${posClass}" data-trade-idx="${idx}">
         <div class="trade-card-inner full-slab-card">
-          <img src="${item.image}" alt="${item.cardName}" class="w-full h-full object-cover" />
+          <img src="${item.image}" alt="${item.cardName}" class="w-full h-full object-cover" loading="lazy" />
         </div>
       </div>
     `;
   }).join('');
 
-  // 3. Render Right Side Dots Indicator
+  // 3. Render Dots Indicator
   if (dots) {
     dots.innerHTML = TRADE_PROPOSALS.map((_, idx) => `
       <div onclick="setTradeIndex(${idx})" class="trade-dot ${idx === activeTradeIndex ? 'active' : ''}"></div>
     `).join('');
   }
+
+  // 4. Initialize Touch Gestures on Mobile
+  initTradeTouchGestures();
+}
+
+// Touch swipe gestures for mobile trade stack
+function initTradeTouchGestures() {
+  const stack = document.getElementById('tradeStack') || document.getElementById('gbeaugoninTradeStack');
+  if (!stack || stack.dataset.touchBound) return;
+  stack.dataset.touchBound = 'true';
+
+  let startY = 0;
+  let startX = 0;
+
+  stack.addEventListener('touchstart', (e) => {
+    if (e.touches && e.touches.length > 0) {
+      startY = e.touches[0].clientY;
+      startX = e.touches[0].clientX;
+    }
+  }, { passive: true });
+
+  stack.addEventListener('touchend', (e) => {
+    if (!e.changedTouches || e.changedTouches.length === 0) return;
+    const deltaY = e.changedTouches[0].clientY - startY;
+    const deltaX = e.changedTouches[0].clientX - startX;
+
+    if (Math.abs(deltaY) > 35 && Math.abs(deltaY) > Math.abs(deltaX)) {
+      if (deltaY < 0) {
+        nextTradeItem(); // Swiped UP
+      } else {
+        prevTradeItem(); // Swiped DOWN
+      }
+    } else if (Math.abs(deltaX) > 35 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (deltaX < 0) {
+        nextTradeItem(); // Swiped LEFT
+      } else {
+        prevTradeItem(); // Swiped RIGHT
+      }
+    }
+  }, { passive: true });
 }
 
 function nextTradeItem() {
@@ -623,7 +669,6 @@ function setTradeIndex(idx) {
   renderGabrielBeaugoninTradeSlider();
 }
 
-// Highlight Nav Link
 function highlightActiveNav() {
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
   const navLinks = document.querySelectorAll('header nav a');

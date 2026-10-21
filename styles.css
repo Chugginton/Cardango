@@ -68,23 +68,47 @@ body {
   opacity: 1;
 }
 
-/* 3D VERTICAL STACK TRADE TERMINAL (CLEAN & SIMPLE CLASS NAMES) */
+/* 3D VERTICAL STACK TRADE TERMINAL (RESPONSIVE & MOBILE-FIRST) */
 .trade-container,
 .gbeaugonin-trade-container {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  min-width: calc(100vh - 120px);
-  padding: 2rem 4rem;
+  justify-content: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 1rem 2rem;
   position: relative;
-  background-color: #f4f4f6;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .trade-container,
+  .gbeaugonin-trade-container {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 3rem 2rem;
+    gap: 3rem;
+  }
 }
 
 /* Left Info Box */
 .trade-info,
 .gbeaugonin-left-info {
+  width: 100%;
   max-width: 480px;
   z-index: 40;
+}
+
+@media (max-width: 767px) {
+  .trade-info,
+  .gbeaugonin-left-info {
+    max-width: 100%;
+    text-align: center;
+    padding: 0 0.5rem;
+  }
 }
 
 .trade-info h1,
@@ -97,6 +121,14 @@ body {
   margin-bottom: 0.25rem;
 }
 
+@media (max-width: 767px) {
+  .trade-info h1,
+  .gbeaugonin-left-info h1 {
+    font-size: 1.85rem;
+    line-height: 1.2;
+  }
+}
+
 .trade-info p.subtitle,
 .gbeaugonin-left-info p.subtitle {
   font-size: 1.8rem;
@@ -105,11 +137,28 @@ body {
   margin-bottom: 2.5rem;
 }
 
+@media (max-width: 767px) {
+  .trade-info p.subtitle,
+  .gbeaugonin-left-info p.subtitle {
+    font-size: 1.2rem;
+    margin-bottom: 1.25rem;
+  }
+}
+
 .trade-action-buttons,
 .gbeaugonin-action-buttons {
   display: flex;
   align-items: center;
   gap: 0.8rem;
+}
+
+@media (max-width: 767px) {
+  .trade-action-buttons,
+  .gbeaugonin-action-buttons {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
 }
 
 .trade-btn,
@@ -125,6 +174,15 @@ body {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   transition: all 0.25s cubic-bezier(0.075, 0.82, 0.165, 1);
   cursor: pointer;
+}
+
+@media (max-width: 767px) {
+  .trade-btn,
+  .gbeaugonin-btn {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 14px;
+  }
 }
 
 .trade-btn:hover,
@@ -143,6 +201,18 @@ body {
   perspective: 1500px;
   transform-style: preserve-3d;
   user-select: none;
+  touch-action: pan-y;
+}
+
+@media (max-width: 767px) {
+  .trade-stack,
+  .gbeaugonin-right-stack {
+    width: 250px;
+    height: 350px;
+    max-width: 76vw;
+    perspective: 1000px;
+    margin: 1.25rem auto 1.25rem;
+  }
 }
 
 .trade-stack-card,
@@ -158,6 +228,13 @@ body {
   transform-origin: center center;
   will-change: transform, opacity;
   cursor: pointer;
+}
+
+@media (max-width: 767px) {
+  .trade-stack-card,
+  .gbeaugonin-stack-item {
+    border-radius: 20px;
+  }
 }
 
 .trade-stack-card.pos-active,
@@ -200,6 +277,33 @@ body {
   pointer-events: none;
 }
 
+/* Responsive 3D offsets on mobile to prevent clipping and overflow */
+@media (max-width: 767px) {
+  .trade-stack-card.pos-prev,
+  .gbeaugonin-stack-item.pos-prev {
+    transform: translateY(-130px) scale(0.84) rotateX(-85deg);
+    opacity: 0.45;
+  }
+
+  .trade-stack-card.pos-next,
+  .gbeaugonin-stack-item.pos-next {
+    transform: translateY(130px) scale(0.84) rotateX(85deg);
+    opacity: 0.45;
+  }
+
+  .trade-stack-card.pos-hidden-top,
+  .gbeaugonin-stack-item.pos-hidden-top {
+    transform: translateY(-190px) scale(0.65) rotateX(-95deg);
+    opacity: 0;
+  }
+
+  .trade-stack-card.pos-hidden-bottom,
+  .gbeaugonin-stack-item.pos-hidden-bottom {
+    transform: translateY(190px) scale(0.65) rotateX(95deg);
+    opacity: 0;
+  }
+}
+
 /* Full Trading Card Slab in 3D Stack (Uncut) */
 .trade-card-inner.full-slab-card,
 .gbeaugonin-card-inner.full-slab-card {
@@ -212,6 +316,14 @@ body {
   background: #ffffff;
   border: 5px solid #ffffff;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(2, 132, 199, 0.2);
+}
+
+@media (max-width: 767px) {
+  .trade-card-inner.full-slab-card,
+  .gbeaugonin-card-inner.full-slab-card {
+    border-radius: 20px;
+    border: 4px solid #ffffff;
+  }
 }
 
 .trade-card-inner.full-slab-card img,
@@ -249,8 +361,8 @@ body {
 
 .trade-dot,
 .gbeaugonin-dot {
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background-color: #1a1a1a;
   opacity: 0.2;
@@ -262,6 +374,33 @@ body {
 .gbeaugonin-dot.active {
   opacity: 1;
   transform: scale(1.4);
+}
+
+@media (max-width: 767px) {
+  .trade-dots,
+  .gbeaugonin-dots {
+    position: static;
+    transform: none;
+    flex-direction: row;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0.25rem auto 1rem;
+    width: 100%;
+  }
+
+  .trade-dot,
+  .gbeaugonin-dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .trade-dot.active,
+  .gbeaugonin-dot.active {
+    width: 20px;
+    border-radius: 9999px;
+    background-color: #0284c7;
+    transform: none;
+  }
 }
 
 /* 3D Horizontal Cylinder Carousel */
