@@ -124,18 +124,33 @@ async function getTransporter() {
   if (cachedTransporter) return { transporter: cachedTransporter, isEthereal };
 
   // 1. Check if user configured SMTP in .env
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-    cachedTransporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 587),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    });
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    const cleanPass = String(process.env.SMTP_PASS || '').replace(/\s+/g, '');
+    const user = String(process.env.SMTP_USER || '').trim();
+    const isGmail = (process.env.SMTP_HOST || '').includes('gmail') || user.includes('@gmail.com');
+
+    if (isGmail) {
+      cachedTransporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: user,
+          pass: cleanPass
+        }
+      });
+      console.log('[CARDANGO Mail] Connected to Gmail SMTP for:', user);
+    } else {
+      cachedTransporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: Number(process.env.SMTP_PORT || 587),
+        secure: process.env.SMTP_SECURE === 'true',
+        auth: {
+          user: user,
+          pass: cleanPass
+        }
+      });
+      console.log('[CARDANGO Mail] Using configured SMTP server:', process.env.SMTP_HOST);
+    }
     isEthereal = false;
-    console.log('[CARDANGO Mail] Using configured SMTP server:', process.env.SMTP_HOST);
     return { transporter: cachedTransporter, isEthereal };
   }
 
