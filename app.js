@@ -499,7 +499,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Trade Proposals derived from live catalog (prevents ReferenceError on trade.html)
-const TRADE_PROPOSALS = (typeof CARDS_DATA !== 'undefined' ? CARDS_DATA : []).slice(0, 8).map((card, idx) => ({
+let TRADE_PROPOSALS = (typeof CARDS_DATA !== 'undefined' ? CARDS_DATA : []).slice(0, 8).map((card, idx) => ({
   cardId: card.id,
   cardName: card.title,
   cardPrice: card.price,
@@ -509,6 +509,24 @@ const TRADE_PROPOSALS = (typeof CARDS_DATA !== 'undefined' ? CARDS_DATA : []).sl
   traderEmail: ['aarav.collector@cardango.test', 'sofia.dsouza@cardango.test', 'kabir.rao@cardango.test', 'elena.f@cardango.test', 'arjun.nair@cardango.test', 'mira.kapoor@cardango.test', 'dev.patel@cardango.test', 'zara.khan@cardango.test'][idx % 8],
   traderRole: ['Pro Collector • Mumbai', 'Vault Verified • Goa', 'Slab Expert • Delhi', 'Top Trader • Bengaluru', 'Grail Hunter • Pune', 'Mint Specialist • Jaipur', 'Holo Scout • Hyderabad', 'Vault Curator • Chennai'][idx % 8]
 }));
+
+async function loadLiveTradeWheelCards() {
+  const stack = document.getElementById('tradeStack') || document.getElementById('gbeaugoninTradeStack');
+  if (!stack) return;
+
+  try {
+    const res = await fetch('/api/trades/listings');
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.listings) && data.listings.length > 0) {
+        TRADE_PROPOSALS = data.listings;
+        renderGabrielBeaugoninTradeSlider();
+      }
+    }
+  } catch (e) {
+    console.warn('Trade wheel listings sync notice:', e.message);
+  }
+}
 
 // Render 3D Stack Trade Wheel (Clean, Simple Architecture)
 function renderGabrielBeaugoninTradeSlider() {

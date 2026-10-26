@@ -10,6 +10,90 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
 const LOCAL_TRADES_FILE = path.join(__dirname, 'trades.json');
+const LOCAL_LISTINGS_FILE = path.join(__dirname, 'trade_listings.json');
+
+const DEFAULT_TRADE_LISTINGS = [
+  {
+    cardId: 1,
+    cardName: 'Ho-oh ex Ultra Rare Holo #260',
+    cardPrice: 203350,
+    cardPriceEth: 0.88,
+    image: 'uploads/card_1791720108934_dbyhqy.jpg',
+    traderName: 'Aarav Mehta',
+    traderEmail: 'aarav.collector@cardango.test',
+    traderRole: 'Pro Collector • Mumbai'
+  },
+  {
+    cardId: 2,
+    cardName: 'Charizard 1st Edition Shadowless Holo #004',
+    cardPrice: 1079000,
+    cardPriceEth: 4.60,
+    image: 'https://i.pinimg.com/736x/35/ca/32/35ca32abb63da8220873970a391d6876.jpg',
+    traderName: 'Sofia D’Souza',
+    traderEmail: 'sofia.dsouza@cardango.test',
+    traderRole: 'Vault Verified • Goa'
+  },
+  {
+    cardId: 3,
+    cardName: 'Monkey D. Luffy Gear 5 Manga Secret #01',
+    cardPrice: 481400,
+    cardPriceEth: 2.05,
+    image: 'https://i.pinimg.com/1200x/8a/6f/20/8a6f2091122f67b8813a9849b742b60a.jpg',
+    traderName: 'Kabir Rao',
+    traderEmail: 'kabir.rao@cardango.test',
+    traderRole: 'Slab Expert • Delhi'
+  },
+  {
+    cardId: 4,
+    cardName: 'Lionel Messi 2022 World Cup Golden Ball Refractor',
+    cardPrice: 738700,
+    cardPriceEth: 3.15,
+    image: 'https://i.pinimg.com/736x/da/6f/2c/da6f2c6782704e4120fc689f5da89482.jpg',
+    traderName: 'Elena Fernandes',
+    traderEmail: 'elena.f@cardango.test',
+    traderRole: 'Top Trader • Bengaluru'
+  },
+  {
+    cardId: 5,
+    cardName: 'Sachin Tendulkar 1999 Century Relic Slab',
+    cardPrice: 323700,
+    cardPriceEth: 1.38,
+    image: 'https://i.pinimg.com/736x/42/e3/1a/42e31a89a861c1bf09dd484ceb6babac.jpg',
+    traderName: 'Arjun Nair',
+    traderEmail: 'arjun.nair@cardango.test',
+    traderRole: 'Grail Hunter • Pune'
+  },
+  {
+    cardId: 6,
+    cardName: 'Senior Full-Stack Architect #01',
+    cardPrice: 12450,
+    cardPriceEth: 0.05,
+    image: 'https://i.pinimg.com/736x/a9/78/19/a97819aa814cf2614b9b8ce97a71248e.jpg',
+    traderName: 'Mira Kapoor',
+    traderEmail: 'mira.kapoor@cardango.test',
+    traderRole: 'Mint Specialist • Jaipur'
+  },
+  {
+    cardId: 7,
+    cardName: 'Gengar VMAX Alternate Art Holo #271',
+    cardPrice: 348600,
+    cardPriceEth: 1.48,
+    image: 'https://i.pinimg.com/736x/7d/53/7d/7d537d921356f9660ad5579fa0378051.jpg',
+    traderName: 'Dev Patel',
+    traderEmail: 'dev.patel@cardango.test',
+    traderRole: 'Holo Scout • Hyderabad'
+  },
+  {
+    cardId: 8,
+    cardName: 'Roronoa Zoro King of Hell Secret Rare #02',
+    cardPrice: 282200,
+    cardPriceEth: 1.20,
+    image: 'https://i.pinimg.com/736x/a0/0b/c5/a00bc506306e9ca9c2bfb032d8494b7e.jpg',
+    traderName: 'Zara Khan',
+    traderEmail: 'zara.khan@cardango.test',
+    traderRole: 'Vault Curator • Chennai'
+  }
+];
 
 // In-memory / file cache fallback if Supabase table is not yet provisioned
 function readLocalTrades() {
@@ -511,6 +595,55 @@ const TradesService = {
       message: 'Trade accepted! Both collectors have been notified and the card swap is confirmed.',
       emailPreviews
     };
+  },
+
+  /**
+   * Add a card to the 3D P2P Trade Wheel listings
+   */
+  addTradeListing(listing) {
+    const listings = this.getRawTradeListings();
+    const filtered = listings.filter(l => String(l.cardId) !== String(listing.cardId) && l.cardName !== listing.cardName);
+    filtered.unshift({
+      cardId: listing.cardId || Date.now(),
+      cardName: listing.cardName,
+      cardPrice: Number(listing.cardPrice || 10000),
+      cardPriceEth: Number(listing.cardPriceEth || 0.05),
+      image: listing.image,
+      traderName: (listing.traderName || 'Verified Collector').trim(),
+      traderEmail: (listing.traderEmail || 'collector@cardango.com').trim().toLowerCase(),
+      traderRole: (listing.traderRole || 'Vault Verified • Uploader').trim(),
+      createdAt: new Date().toISOString()
+    });
+    try {
+      fs.writeFileSync(LOCAL_LISTINGS_FILE, JSON.stringify(filtered, null, 2), 'utf8');
+    } catch (e) {
+      console.warn('Failed to write trade_listings.json:', e.message);
+    }
+    return filtered[0];
+  },
+
+  getRawTradeListings() {
+    try {
+      if (fs.existsSync(LOCAL_LISTINGS_FILE)) {
+        const raw = fs.readFileSync(LOCAL_LISTINGS_FILE, 'utf8');
+        return JSON.parse(raw || '[]');
+      }
+    } catch (e) {}
+    return [];
+  },
+
+  getTradeListings() {
+    const userListings = this.getRawTradeListings();
+    const existingNames = new Set(userListings.map(u => (u.cardName || '').toLowerCase().trim()));
+    const padded = [...userListings];
+    for (const d of DEFAULT_TRADE_LISTINGS) {
+      if (padded.length >= 8) break;
+      if (!existingNames.has(d.cardName.toLowerCase().trim())) {
+        padded.push(d);
+        existingNames.add(d.cardName.toLowerCase().trim());
+      }
+    }
+    return padded;
   },
 
   /**

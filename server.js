@@ -762,6 +762,19 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // 6. GET /api/trades/listings - Fetch live cards available on the 3D Trade Wheel
+  if (req.method === 'GET' && pathname === '/api/trades/listings') {
+    try {
+      const listings = TradesService.getTradeListings();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, listings }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
   // 5. GET /api/trades/detail - Get specific trade details
   if (req.method === 'GET' && pathname === '/api/trades/detail') {
     const tradeId = reqUrl.searchParams.get('id');

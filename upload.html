@@ -256,6 +256,16 @@
                   <div class="text-[10px] text-slate-500">Feature in auction reel showcase</div>
                 </div>
               </label>
+              <label class="flex items-center gap-3 p-3.5 bg-sky-50/70 rounded-2xl border border-sky-300 hover:border-sky-500 cursor-pointer transition-all sm:col-span-2 shadow-sm">
+                <input type="checkbox" id="inputInTrade" checked class="w-4 h-4 text-sky-600 rounded focus:ring-sky-500" onchange="updateLivePreview()" />
+                <div class="flex-1">
+                  <div class="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                    <span>List on 3D P2P Trade Terminal</span>
+                    <span class="px-1.5 py-0.2 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold rounded-full">Available for Trade</span>
+                  </div>
+                  <div class="text-[10px] text-slate-500">Feature on the 3D Trade Wheel so other collectors can propose swaps &amp; email you offers</div>
+                </div>
+              </label>
             </div>
 
             <!-- 6. Card Description -->
@@ -303,6 +313,9 @@
                 </div>
 
                 <div class="absolute bottom-2 right-2 z-20">
+                  <span id="previewTradeTag" class="px-2 py-0.5 text-[9px] font-black bg-emerald-600 text-white rounded-full shadow-sm">
+                    P2P Trade Ready
+                  </span>
                   <span id="previewCarouselTag" class="hidden px-2 py-0.5 text-[9px] font-black bg-sky-600 text-white rounded-full shadow-sm">
                     3D Orbit
                   </span>
@@ -569,6 +582,12 @@
       let imageUrl = uploadedImageDataUrl || document.getElementById('inputImageUrl').value || 'uploads/card_1791720108934_dbyhqy.jpg';
       imageUrl = normalizeCardImage(imageUrl);
       const inCarousel = document.getElementById('inputInCarousel').checked;
+      const inTrade = document.getElementById('inputInTrade') ? document.getElementById('inputInTrade').checked : true;
+      const tradeTag = document.getElementById('previewTradeTag');
+      if (tradeTag) {
+        if (inTrade) tradeTag.classList.remove('hidden');
+        else tradeTag.classList.add('hidden');
+      }
       const description = document.getElementById('inputDescription').value || 'Authentic collectible slab.';
 
       document.getElementById('previewTitle').textContent = title;
@@ -720,7 +739,12 @@
             image_url: newCard.image,
             is_in_carousel: newCard.is_in_carousel,
             is_spotlight: newCard.is_spotlight,
-            description: newCard.description
+            description: newCard.description,
+            is_in_trade: document.getElementById('inputInTrade') ? document.getElementById('inputInTrade').checked : true,
+            owner_id: (typeof getAuthUser === 'function' && getAuthUser()) ? getAuthUser().id : 'usr_collector',
+            owner_name: (typeof getAuthUser === 'function' && getAuthUser()) ? getAuthUser().name : 'Verified Collector',
+            owner_email: (typeof getAuthUser === 'function' && getAuthUser()) ? getAuthUser().email : 'collector@cardango.com',
+            owner_role: (typeof getAuthUser === 'function' && getAuthUser()) ? (getAuthUser().role || 'Vault Collector') : 'Vault Collector • Uploader'
           })
         });
 
