@@ -506,6 +506,7 @@ const TRADE_PROPOSALS = (typeof CARDS_DATA !== 'undefined' ? CARDS_DATA : []).sl
   cardPriceEth: card.priceEth,
   image: card.image,
   traderName: ['Aarav Mehta', 'Sofia D’Souza', 'Kabir Rao', 'Elena Fernandes', 'Arjun Nair', 'Mira Kapoor', 'Dev Patel', 'Zara Khan'][idx % 8],
+  traderEmail: ['aarav.collector@cardango.test', 'sofia.dsouza@cardango.test', 'kabir.rao@cardango.test', 'elena.f@cardango.test', 'arjun.nair@cardango.test', 'mira.kapoor@cardango.test', 'dev.patel@cardango.test', 'zara.khan@cardango.test'][idx % 8],
   traderRole: ['Pro Collector • Mumbai', 'Vault Verified • Goa', 'Slab Expert • Delhi', 'Top Trader • Bengaluru', 'Grail Hunter • Pune', 'Mint Specialist • Jaipur', 'Holo Scout • Hyderabad', 'Vault Curator • Chennai'][idx % 8]
 }));
 
@@ -571,7 +572,7 @@ function renderGabrielBeaugoninTradeSlider() {
         </div>
         
         <div class="trade-action-buttons pt-2 justify-center md:justify-start flex-wrap gap-2">
-          <button onclick="submitTradeOffer()" class="flex-1 sm:flex-none px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white font-black text-xs rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 min-w-[150px] active:scale-95">
+          <button onclick="openTradeProposalModal()" class="flex-1 sm:flex-none px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white font-black text-xs rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 min-w-[150px] active:scale-95">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
             <span>Propose Swap</span>
           </button>
@@ -1336,6 +1337,358 @@ function closeTradeModal() {
   if (modal) {
     modal.classList.add('hidden');
     modal.classList.remove('flex');
+  }
+}
+
+
+// ==========================================
+// P2P ESCROW TRADE & OFFER SYSTEM BACKEND CLIENT
+// ==========================================
+
+let availableTradeCards = [];
+
+function openTradeProposalModal() {
+  requireAuth('propose card swaps and escrow trades', () => {
+    initTradeProposalModal();
+  });
+}
+
+function closeTradeProposalModal() {
+  const modal = document.getElementById('tradeProposalModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+}
+
+function initTradeProposalModal() {
+  const currentTrade = TRADE_PROPOSALS[activeTradeIndex % TRADE_PROPOSALS.length] || TRADE_PROPOSALS[0];
+  if (!currentTrade) return;
+
+  const modal = document.getElementById('tradeProposalModal');
+  const targetImg = document.getElementById('modalTargetImg');
+  const targetTitle = document.getElementById('modalTargetTitle');
+  const targetPrice = document.getElementById('modalTargetPrice');
+  const targetOwner = document.getElementById('modalTargetOwner');
+  const ownerEmailInput = document.getElementById('modalOwnerEmail');
+  const select = document.getElementById('modalOfferedSelect');
+  const previewBox = document.getElementById('modalEmailPreviews');
+
+  if (previewBox) previewBox.classList.add('hidden');
+
+  if (targetImg) targetImg.src = currentTrade.image;
+  if (targetTitle) targetTitle.textContent = currentTrade.cardName;
+  if (targetPrice) targetPrice.textContent = `${formatINR(currentTrade.cardPrice)} (${currentTrade.cardPriceEth} ETH)`;
+  if (targetOwner) targetOwner.textContent = currentTrade.traderName;
+  if (ownerEmailInput) {
+    ownerEmailInput.value = currentTrade.traderEmail || 'collector@cardango.test';
+  }
+
+  // Populate Offered Cards from user's collection, plus catalog fallback
+  availableTradeCards = [];
+  if (Array.isArray(myCollection) && myCollection.length > 0) {
+    myCollection.forEach(c => {
+      availableTradeCards.push({
+        id: c.id,
+        title: c.title || c.name,
+        price: c.price || 5000,
+        image: c.image || c.imageUrl,
+        source: 'Your Collection'
+      });
+    });
+  }
+
+  if (Array.isArray(CARDS_DATA)) {
+    CARDS_DATA.slice(0, 10).forEach(c => {
+      if (c.id !== currentTrade.cardId && !availableTradeCards.some(a => a.id === c.id)) {
+        availableTradeCards.push({
+          id: c.id,
+          title: c.title,
+          price: c.price,
+          image: c.image,
+          source: 'Catalog Vault'
+        });
+      }
+    });
+  }
+
+  if (select) {
+    select.innerHTML = availableTradeCards.map((c, idx) => `
+      <option value="${idx}">[${c.source}] ${c.title} — ${formatINR(c.price)}</option>
+    `).join('');
+  }
+
+  onModalOfferChange();
+
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+}
+
+function onModalOfferChange() {
+  const select = document.getElementById('modalOfferedSelect');
+  const offeredImg = document.getElementById('modalOfferedImg');
+  const offeredTitle = document.getElementById('modalOfferedTitle');
+  const offeredPrice = document.getElementById('modalOfferedPrice');
+
+  if (!select) return;
+  const idx = Number(select.value);
+  const card = availableTradeCards[idx] || availableTradeCards[0];
+
+  if (card) {
+    if (offeredImg) offeredImg.src = card.image;
+    if (offeredTitle) offeredTitle.textContent = card.title;
+    if (offeredPrice) offeredPrice.textContent = formatINR(card.price);
+  }
+}
+
+async function confirmAndSendTradeProposal() {
+  const btn = document.getElementById('modalSubmitTradeBtn');
+  const currentTrade = TRADE_PROPOSALS[activeTradeIndex % TRADE_PROPOSALS.length] || TRADE_PROPOSALS[0];
+  const select = document.getElementById('modalOfferedSelect');
+  const ownerEmailInput = document.getElementById('modalOwnerEmail');
+  const cashInput = document.getElementById('modalCashSweetener');
+  const noteInput = document.getElementById('modalTradeNote');
+  const previewBox = document.getElementById('modalEmailPreviews');
+  const previewLinks = document.getElementById('modalEmailPreviewLinks');
+
+  const selectedIdx = select ? Number(select.value) : 0;
+  const offeredCard = availableTradeCards[selectedIdx] || availableTradeCards[0];
+  const user = getAuthUser();
+
+  const ownerEmail = (ownerEmailInput ? ownerEmailInput.value : '').trim();
+  if (!ownerEmail) {
+    showToast('Please enter a recipient email address.');
+    return;
+  }
+
+  const payload = {
+    proposer_id: user ? user.id : 'usr_collector',
+    proposer_name: user ? user.name : 'Verified Collector',
+    proposer_email: user ? user.email : 'collector@cardango.test',
+    owner_id: 'usr_owner',
+    owner_name: currentTrade.traderName,
+    owner_email: ownerEmail,
+    target_card_id: currentTrade.cardId,
+    target_card_title: currentTrade.cardName,
+    target_card_image: currentTrade.image,
+    target_card_price: currentTrade.cardPrice,
+    offered_card_id: offeredCard.id,
+    offered_card_title: offeredCard.title,
+    offered_card_image: offeredCard.image,
+    offered_card_price: offeredCard.price,
+    cash_sweetener: Number(cashInput ? cashInput.value : 0),
+    note: noteInput ? noteInput.value : ''
+  };
+
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span class="animate-spin inline-block mr-2">⏳</span> Dispatching Escrow Emails...`;
+    }
+
+    const res = await fetch('/api/trades/propose', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to submit trade proposal');
+    }
+
+    showToast(`🎉 Escrow Proposal ${data.trade.id} sent! Notification email dispatched.`);
+
+    if (Array.isArray(data.emailPreviews) && data.emailPreviews.length > 0 && previewBox && previewLinks) {
+      previewBox.classList.remove('hidden');
+      previewLinks.innerHTML = data.emailPreviews.map(p => `
+        <div class="flex items-center justify-between py-1 border-b border-sky-100 last:border-0">
+          <span class="text-[11px] font-medium text-slate-700 truncate mr-2">
+            ${p.type === 'owner_proposal' ? '📬 Owner Swap Offer' : '🛡️ Proposer Receipt'} (${p.recipient}):
+          </span>
+          <a href="${p.url}" target="_blank" class="px-2.5 py-1 bg-sky-600 text-white font-bold rounded-lg text-[10px] hover:bg-sky-700 transition-colors flex-shrink-0">
+            Open Test Inbox ↗
+          </a>
+        </div>
+      `).join('');
+    }
+
+    updateMyTradesBadge();
+
+  } catch (err) {
+    showToast('Trade error: ' + err.message);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg><span>Send Swap Proposal &amp; Dispatch Emails</span>`;
+    }
+  }
+}
+
+// My Trades Modal
+function openMyTradesModal() {
+  const modal = document.getElementById('myTradesModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    loadMyTrades();
+  }
+}
+
+function closeMyTradesModal() {
+  const modal = document.getElementById('myTradesModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+}
+
+async function loadMyTrades() {
+  const container = document.getElementById('myTradesList');
+  if (!container) return;
+
+  const user = getAuthUser();
+  const emailParam = user ? `?email=${encodeURIComponent(user.email)}` : '';
+
+  try {
+    const res = await fetch(`/api/trades${emailParam}`);
+    const data = await res.json();
+    const trades = (data && data.trades) || [];
+
+    if (trades.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-10 space-y-2">
+          <div class="text-3xl">🛡️</div>
+          <p class="text-xs font-bold text-slate-700">No active trades in your vault yet.</p>
+          <p class="text-[11px] text-slate-400">Propose a swap from the trade terminal to see it here.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = trades.map(trade => {
+      let statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-700 border border-amber-200 animate-pulse">⏳ Pending Response</span>';
+      if (trade.status === 'confirmed') {
+        statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">✅ Confirmed &amp; Swapped</span>';
+      } else if (trade.status === 'declined') {
+        statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-600 border border-slate-200">✕ Declined</span>';
+      }
+
+      return `
+        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black text-slate-800">${trade.id}</span>
+            ${statusBadge}
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="p-2 bg-white rounded-xl border border-slate-100 flex items-center gap-2">
+              <img src="${trade.target_card_image}" class="w-10 h-10 object-contain rounded bg-slate-50" />
+              <div class="min-w-0">
+                <div class="font-bold text-slate-800 truncate">${trade.target_card_title}</div>
+                <div class="text-[10px] text-slate-500">Target (${formatINR(trade.target_card_price)})</div>
+              </div>
+            </div>
+            <div class="p-2 bg-white rounded-xl border border-slate-100 flex items-center gap-2">
+              <img src="${trade.offered_card_image}" class="w-10 h-10 object-contain rounded bg-slate-50" />
+              <div class="min-w-0">
+                <div class="font-bold text-slate-800 truncate">${trade.offered_card_title}</div>
+                <div class="text-[10px] text-slate-500">Offered (${formatINR(trade.offered_card_price)})</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-200">
+            <div>
+              <span>From: <strong>${trade.proposer_name}</strong></span>
+              <span> → To: <strong>${trade.owner_name}</strong></span>
+            </div>
+            ${trade.status === 'pending' ? `
+              <div class="flex items-center gap-1.5">
+                <button onclick="acceptTradeOffer('${trade.id}', '${trade.confirmation_token || ''}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[11px] transition-colors">
+                  Accept Swap
+                </button>
+                <button onclick="declineTradeOffer('${trade.id}', '${trade.confirmation_token || ''}')" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg text-[11px] transition-colors">
+                  Decline
+                </button>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  } catch (err) {
+    container.innerHTML = `<div class="text-xs text-red-500 py-4 text-center">Failed to load trades: ${err.message}</div>`;
+  }
+}
+
+async function acceptTradeOffer(tradeId, token) {
+  try {
+    const res = await fetch(`/api/trades/accept?id=${encodeURIComponent(tradeId)}&token=${encodeURIComponent(token)}`, {
+      method: 'POST'
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Failed to accept trade');
+
+    showToast('🎉 Trade Confirmed! The card has been swapped into your collection.');
+    loadMyTrades();
+  } catch (err) {
+    showToast('Error: ' + err.message);
+  }
+}
+
+async function declineTradeOffer(tradeId, token) {
+  try {
+    const res = await fetch(`/api/trades/decline?id=${encodeURIComponent(tradeId)}&token=${encodeURIComponent(token)}`, {
+      method: 'POST'
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Failed to decline trade');
+
+    showToast('Trade proposal declined.');
+    loadMyTrades();
+  } catch (err) {
+    showToast('Error: ' + err.message);
+  }
+}
+
+async function updateMyTradesBadge() {
+  const badge = document.getElementById('myTradesBadge');
+  if (!badge) return;
+  try {
+    const res = await fetch('/api/trades');
+    const data = await res.json();
+    const trades = (data && data.trades) || [];
+    const pendingCount = trades.filter(t => t.status === 'pending').length;
+    if (pendingCount > 0) {
+      badge.textContent = pendingCount;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+  } catch (e) {}
+}
+
+function checkTradeUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const confirmedId = params.get('tradeConfirmed');
+  const declinedId = params.get('tradeDeclined');
+  const tradeAction = params.get('tradeAction');
+  const id = params.get('id');
+  const token = params.get('token');
+
+  if (confirmedId) {
+    showToast(`🎉 Escrow Trade ${confirmedId} Confirmed! The cards have swapped ownership.`);
+    setTimeout(openMyTradesModal, 800);
+  } else if (declinedId) {
+    showToast(`Trade proposal ${declinedId} has been declined.`);
+  } else if (tradeAction === 'accept' && id && token) {
+    acceptTradeOffer(id, token);
+  } else if (tradeAction === 'decline' && id && token) {
+    declineTradeOffer(id, token);
   }
 }
 

@@ -23,12 +23,12 @@
       <nav class="hidden md:flex items-center gap-6 text-xs font-bold text-slate-600">
         <a href="index.html" class="hover:text-sky-600 transition-colors py-1">Home</a>
         <a href="marketplace.html" class="text-sky-600 font-extrabold transition-colors py-1">Catalog</a>
-        <a href="trade.html" class="hover:text-sky-600 transition-colors py-1">P2P Trade</a>
+        <a href="trade.html" class="hover:text-sky-600 transition-colors py-1">Trade</a>
         <a href="collection.html" class="hover:text-sky-600 transition-colors py-1 flex items-center gap-1.5">
           <span>Your Collection</span>
           <span id="collectionNavBadge" class="hidden px-1.5 py-0.2 bg-amber-500 text-white text-[10px] font-black rounded-full">0</span>
         </a>
-        <a href="upload.html" class="hover:text-sky-600 transition-colors py-1">Mint Card</a>
+        <a href="upload.html" class="hover:text-sky-600 transition-colors py-1">Upload Card</a>
       </nav>
 
       <!-- Right Side Group: Cart + Dropdown + Sign In Badge -->
@@ -54,15 +54,15 @@
             </a>
             <a href="trade.html" class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-sky-50 hover:text-sky-600 rounded-xl transition-colors">
               <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-              <span>P2P Trade</span>
+              <span>Trade</span>
             </a>
             <a href="collection.html" class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-sky-50 hover:text-sky-600 rounded-xl transition-colors">
               <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
-              <span>Your Collection</span>
+              <span>Collection</span>
             </a>
             <a href="upload.html" class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-sky-50 hover:text-sky-600 rounded-xl transition-colors">
               <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-              <span>Mint / Upload Card</span>
+              <span>Upload Card</span>
             </a>
           </div>
         </div>
@@ -78,8 +78,6 @@
   <section class="pt-6 pb-2 px-4 sm:px-6 lg:px-8">
     <div class="w-full space-y-3">
       <div class="text-center sm:text-left">
-        <h2 class="text-2xl font-black text-slate-900 tracking-tight">Rare Card Vault & 3D Orbit</h2>
-        <p class="text-xs text-slate-500">Live 3D cylinder orbit of rare collectibles in rotation</p>
       </div>
 
       <!-- 3D CYLINDER CAROUSEL SLIDER -->
@@ -108,7 +106,6 @@
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-sky-200">
         <div>
           <h1 class="text-2xl sm:text-3xl font-black text-slate-900">CARDANGO Catalog</h1>
-          <p class="text-xs text-slate-500 mt-0.5">Explore Dev Cards, Pokémon, Anime, and Cricket collectibles.</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
@@ -117,7 +114,7 @@
             <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
           </div>
 
-          <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-sky-200 text-xs font-bold shadow-sm">
+          <div class="flex items-center gap-2 bg-white p-2 rounded-xl border border-sky-200 text-xs font-bold shadow-sm">
             <button data-category-filter="all" class="px-3 py-1 rounded bg-sky-600 text-white">All</button>
             <button data-category-filter="dev" class="px-3 py-1 rounded bg-white text-slate-700 hover:bg-sky-50">Dev Cards</button>
             <button data-category-filter="pokemon" class="px-3 py-1 rounded bg-white text-slate-700 hover:bg-sky-50">Pokémon</button>
@@ -127,7 +124,7 @@
           </div>
 
           <!-- Upload / Mint Card Action -->
-          <a href="upload.html" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900 hover:bg-sky-600 text-white rounded-xl text-xs font-bold shadow-sm transition-all hover:scale-105" title="Mint or Upload a Trading Card">
+          <a href="upload.html" class="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-900 hover:bg-sky-600 text-white rounded-xl text-xs font-bold shadow-sm transition-all hover:scale-105" title="Mint or Upload a Trading Card">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
             <span>Upload Card</span>
           </a>
@@ -136,7 +133,7 @@
 
       <!-- DYNAMIC CARDS GRID (FULL WIDTH) -->
       <div id="marketplaceGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-5">
-        <!-- Rendered by app.js -->
+        <!-- Rendered by app.js --> 
       </div>
 
     </div>
@@ -176,22 +173,22 @@
             <li><a href="marketplace.html">Pokémon Cards</a></li>
             <li><a href="marketplace.html">Anime Cards</a></li>
             <li><a href="marketplace.html">Cricket Cards</a></li>
-            <li><a href="upload.html" class="text-sky-300 font-bold hover:underline">+ Upload Card</a></li>
+            <li><a href="upload.html" class="text-sky-300 font-bold hover:underline">Upload Card</a></li>
           </ul>
         </div>
         <div class="md:col-span-3 space-y-3">
           <div class="footer-heading">ABOUT US</div>
           <ul class="space-y-2 text-xs">
             <li><a href="contact.html">Our Story</a></li>
-            <li><a href="trade.html">Authenticity Guarantee</a></li>
-            <li><a href="trade.html">CARDANGO Escrow Protection</a></li>
+            <li><a href="trade.html">Authenticity </a></li>
+            <li><a href="trade.html">Escrow Protection</a></li>
           </ul>
         </div>
         <div class="md:col-span-3 space-y-3">
-          <div class="footer-heading">HELP & SUPPORT</div>
+          <div class="footer-heading">SUPPORT</div>
           <ul class="space-y-2 text-xs">
             <li><a href="contact.html">FAQs & Support</a></li>
-            <li><a href="contact.html">Free Card Appraisal</a></li>
+            <li><a href="contact.html">Card Appraisal</a></li>
           </ul>
         </div>
       </div>
@@ -204,7 +201,6 @@
           <span>•</span>
           <a href="#">Cookie Policy</a>
         </div>
-        <div class="text-white/90 font-medium">Made with 🤍 by CARDANGO</div>
       </div>
     </div>
   </footer>

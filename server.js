@@ -5,13 +5,14 @@
  * 2. Uploaded image storage bucket ('cards')
  */
 
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const http = require('http');
 const fs = require('fs');
-const path = require('path');
 const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
+const TradesService = require('./trades_service');
 
 // 1. Initialize Supabase Client
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xaathyktqbysmbioxdxu.supabase.co';
@@ -643,6 +644,141 @@ const server = http.createServer(async (req, res) => {
       res.end(JSON.stringify({ error: 'Database error: ' + exportErr.message }));
       return;
     }
+  }
+
+    // ==================== P2P TRADE & OFFER API ROUTES ====================
+
+  // 1. POST /api/trades/propose - Submit new trade proposal & send emails
+  if (req.method === 'POST' && pathname === '/api/trades/propose') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const protocol = req.headers['x-forwarded-proto'] || 'http';
+        const host = req.headers['host'] || `localhost:${PORT}`;
+        const baseUrl = `${protocol}://${host}`;
+
+        const result = await TradesService.createTradeProposal({
+          supabase,
+          payload,
+          baseUrl
+        });
+
+        res.writeHead(201, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          success: true,
+          trade: result.trade,
+          emailPreviews: result.emailPreviews,
+          message: 'Trade proposal submitted to escrow and emails dispatched!'
+        }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // 2. GET /api/trades - List user or all trades
+  if (req.method === 'GET' && pathname === '/api/trades') {
+    const email = reqUrl.searchParams.get('email');
+    try {
+      const trades = await TradesService.listTrades({ email, supabase });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, trades }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 3. GET & POST /api/trades/accept - Confirm/Accept trade
+  if ((req.method === 'GET' || req.method === 'POST') && pathname === '/api/trades/accept') {
+    const tradeId = reqUrl.searchParams.get('id');
+    const token = reqUrl.searchParams.get('token');
+    const protocol = req.headers['x-forwarded-proto'] || 'http';
+    const host = req.headers['host'] || `localhost:${PORT}`;
+    const baseUrl = `${protocol}://${host}`;
+
+    try {
+      const result = await TradesService.acceptTrade({
+        tradeId,
+        token,
+        supabase,
+        baseUrl
+      });
+
+      if (req.method === 'GET') {
+        res.writeHead(302, { Location: `/trade.html?tradeConfirmed=${encodeURIComponent(tradeId)}` });
+        res.end();
+        return;
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      if (req.method === 'GET') {
+        res.writeHead(400, { 'Content-Type': 'text/html' });
+        res.end(`<h2>Trade Error: ${err.message}</h2><p><a href="/trade.html">Return to CARDANGO</a></p>`);
+        return;
+      }
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 4. GET & POST /api/trades/decline - Decline trade
+  if ((req.method === 'GET' || req.method === 'POST') && pathname === '/api/trades/decline') {
+    const tradeId = reqUrl.searchParams.get('id');
+    const token = reqUrl.searchParams.get('token');
+
+    try {
+      const result = await TradesService.declineTrade({
+        tradeId,
+        token,
+        supabase
+      });
+
+      if (req.method === 'GET') {
+        res.writeHead(302, { Location: `/trade.html?tradeDeclined=${encodeURIComponent(tradeId)}` });
+        res.end();
+        return;
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      if (req.method === 'GET') {
+        res.writeHead(400, { 'Content-Type': 'text/html' });
+        res.end(`<h2>Trade Error: ${err.message}</h2><p><a href="/trade.html">Return to CARDANGO</a></p>`);
+        return;
+      }
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 5. GET /api/trades/detail - Get specific trade details
+  if (req.method === 'GET' && pathname === '/api/trades/detail') {
+    const tradeId = reqUrl.searchParams.get('id');
+    try {
+      const trade = await TradesService.getTrade(tradeId, supabase);
+      if (!trade) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Trade not found' }));
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, trade }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
   }
 
   // ==================== STATIC FILE SERVING ====================
