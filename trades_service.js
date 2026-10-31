@@ -184,6 +184,21 @@ async function getTransporter() {
 /**
  * Format currency helper
  */
+function resolveSafeEmail(email) {
+  if (!email) return process.env.SMTP_USER || 'doshikeval26@gmail.com';
+  const clean = String(email).trim().toLowerCase();
+  if (
+    clean.endsWith('.test') ||
+    clean.endsWith('@cardango.com') ||
+    clean.endsWith('@example.com') ||
+    clean === 'collector@cardango.com' ||
+    clean === 'usr_collector'
+  ) {
+    return process.env.SMTP_USER || 'doshikeval26@gmail.com';
+  }
+  return email.trim();
+}
+
 function formatCurrency(val) {
   if (!val) return '₹0';
   return '₹' + Number(val).toLocaleString('en-IN');
@@ -192,6 +207,66 @@ function formatCurrency(val) {
 /**
  * Email template for when a Trade Proposal is sent
  */
+
+/**
+ * Email template for when a card is listed for trade
+ */
+function renderListingEmail({ card, baseUrl }) {
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #0b1320; color: #f1f5f9; margin: 0; padding: 24px; }
+      .container { max-width: 600px; margin: 0 auto; background: #131d2e; border: 1px solid #1e293b; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+      .header { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); padding: 24px; text-align: center; }
+      .badge { display: inline-block; background: rgba(255,255,255,0.2); color: #fff; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; padding: 4px 12px; border-radius: 9999px; text-transform: uppercase; margin-bottom: 8px; }
+      .title { color: #ffffff; font-size: 22px; font-weight: 900; margin: 0; }
+      .content { padding: 32px 24px; text-align: center; }
+      .intro { font-size: 15px; color: #cbd5e1; line-height: 1.5; margin-bottom: 20px; }
+      .card-preview { background: #1e293b; border-radius: 16px; padding: 20px; display: inline-block; max-width: 280px; margin: 10px auto 24px; border: 1px solid #334155; }
+      .card-img { width: 100%; max-height: 240px; object-fit: contain; border-radius: 12px; margin-bottom: 12px; background: #0f172a; }
+      .btn { display: inline-block; background: #0284c7; color: #ffffff !important; font-size: 14px; font-weight: 800; padding: 14px 32px; border-radius: 12px; text-decoration: none; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4); }
+      .footer { border-top: 1px solid #1e293b; padding: 20px 24px; text-align: center; font-size: 12px; color: #64748b; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <span class="badge">3D P2P TRADE WHEEL</span>
+        <h1 class="title">⚡ Card Listed for Trade!</h1>
+      </div>
+      <div class="content">
+        <p class="intro">
+          Congratulations!<br>
+          Your card <strong>${card.cardName || card.title}</strong> is now live on the CARDANGO 3D Trade Wheel and open for peer-to-peer swap offers.
+        </p>
+
+        <div class="card-preview">
+          <span style="font-size: 10px; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: block; margin-bottom: 8px;">Active on 3D Wheel</span>
+          <img src="${card.image || card.image_url}" alt="${card.cardName || card.title}" class="card-img" />
+          <div style="font-size: 15px; font-weight: 800; color: #ffffff;">${card.cardName || card.title}</div>
+          <div style="font-size: 13px; font-weight: 700; color: #34d399; margin-top: 4px;">${formatCurrency(card.cardPrice || card.price_usd * 83)}</div>
+        </div>
+
+        <p style="font-size: 13px; color: #94a3b8; max-width: 440px; margin: 0 auto 24px;">
+          Other collectors can now view this card on the 3D Trade Wheel and submit swap proposals. Whenever an offer is received, you will be notified right here by email with one-click Accept/Decline options.
+        </p>
+
+        <div>
+          <a href="${baseUrl}/trade.html" class="btn">View on 3D Trade Wheel ↗</a>
+        </div>
+      </div>
+      <div class="footer">
+        CARDANGO Vault Escrow Protocol • Trade Safe &amp; Mint Rare
+      </div>
+    </div>
+  </body>
+  </html>
+  `;
+}
+
 function renderProposalEmailToOwner({ trade, baseUrl, acceptUrl, declineUrl }) {
   return `
   <!DOCTYPE html>
@@ -454,21 +529,29 @@ const TradesService = {
       const declineUrl = `${baseUrl}/trade.html?tradeAction=decline&id=${trade.id}&token=${token}`;
       const viewUrl = `${baseUrl}/trade.html?viewTrade=${trade.id}`;
 
+      // Resolve real recipient emails if placeholder .test domain is used:
+      const targetOwnerEmail = resolveSafeEmail(trade.owner_email);
+
+      const targetProposerEmail = resolveSafeEmail(trade.proposer_email);
+
+      console.log(`[TradesService] Sending owner proposal email to: ${targetOwnerEmail} (raw: ${trade.owner_email})`);
+      console.log(`[TradesService] Sending proposer receipt email to: ${targetProposerEmail} (raw: ${trade.proposer_email})`);
+
       // Email 1: Send to Card Owner
       const ownerInfo = await transporter.sendMail({
-        from: process.env.SMTP_FROM || '"CARDANGO Escrow" <escrow@cardango.com>',
-        to: trade.owner_email,
+        from: process.env.SMTP_FROM || `"CARDANGO Escrow" <${process.env.SMTP_USER || 'escrow@cardango.com'}>`,
+        to: targetOwnerEmail,
         subject: `⚔️ Trade Proposal: ${trade.proposer_name} wants your ${trade.target_card_title}!`,
         html: renderProposalEmailToOwner({ trade, baseUrl, acceptUrl, declineUrl })
       });
 
       const ownerPreview = nodemailer.getTestMessageUrl(ownerInfo);
-      if (ownerPreview) emailPreviews.push({ recipient: trade.owner_email, type: 'owner_proposal', url: ownerPreview });
+      if (ownerPreview) emailPreviews.push({ recipient: targetOwnerEmail, type: 'owner_proposal', url: ownerPreview });
 
       // Email 2: Send to Proposer
       const proposerInfo = await transporter.sendMail({
-        from: process.env.SMTP_FROM || '"CARDANGO Escrow" <escrow@cardango.com>',
-        to: trade.proposer_email,
+        from: process.env.SMTP_FROM || `"CARDANGO Escrow" <${process.env.SMTP_USER || 'escrow@cardango.com'}>`,
+        to: targetProposerEmail,
         subject: `🛡️ Trade Proposal Sent: Your offer for ${trade.target_card_title} is in Escrow`,
         html: renderProposalEmailToProposer({ trade, baseUrl, viewUrl })
       });
@@ -568,10 +651,14 @@ const TradesService = {
     try {
       const { transporter } = await getTransporter();
 
+      const targetOwnerEmail = resolveSafeEmail(trade.owner_email);
+
+      const targetProposerEmail = resolveSafeEmail(trade.proposer_email);
+
       // Email to Owner (received offered card)
       const ownerInfo = await transporter.sendMail({
-        from: process.env.SMTP_FROM || '"CARDANGO Escrow" <escrow@cardango.com>',
-        to: trade.owner_email,
+        from: process.env.SMTP_FROM || `"CARDANGO Escrow" <${process.env.SMTP_USER || 'escrow@cardango.com'}>`,
+        to: targetOwnerEmail,
         subject: `🎉 Trade Confirmed! You acquired ${trade.offered_card_title}`,
         html: renderConfirmedEmail({
           trade,
@@ -582,12 +669,12 @@ const TradesService = {
         })
       });
       const op = nodemailer.getTestMessageUrl(ownerInfo);
-      if (op) emailPreviews.push({ recipient: trade.owner_email, url: op });
+      if (op) emailPreviews.push({ recipient: targetOwnerEmail, url: op });
 
       // Email to Proposer (received target card)
       const propInfo = await transporter.sendMail({
-        from: process.env.SMTP_FROM || '"CARDANGO Escrow" <escrow@cardango.com>',
-        to: trade.proposer_email,
+        from: process.env.SMTP_FROM || `"CARDANGO Escrow" <${process.env.SMTP_USER || 'escrow@cardango.com'}>`,
+        to: targetProposerEmail,
         subject: `🎉 Trade Accepted! You acquired ${trade.target_card_title}`,
         html: renderConfirmedEmail({
           trade,
@@ -610,6 +697,30 @@ const TradesService = {
       message: 'Trade accepted! Both collectors have been notified and the card swap is confirmed.',
       emailPreviews
     };
+  },
+
+  /**
+   * Send confirmation email when a card is listed for trade
+   */
+  async sendTradeListingEmail({ card, userEmail, baseUrl }) {
+    try {
+      const { transporter } = await getTransporter();
+      const targetEmail = resolveSafeEmail(userEmail);
+
+      if (!targetEmail) return;
+
+      console.log('[TradesService] Sending trade listing notification to:', targetEmail);
+      const info = await transporter.sendMail({
+        from: process.env.SMTP_FROM || `"CARDANGO Escrow" <${process.env.SMTP_USER || 'escrow@cardango.com'}>`,
+        to: targetEmail,
+        subject: `⚡ Card Listed for Trade: ${card.cardName || card.title}!`,
+        html: renderListingEmail({ card, baseUrl })
+      });
+      console.log('[TradesService] Trade listing email sent:', info.messageId);
+      return info;
+    } catch (err) {
+      console.warn('[TradesService] Listing email notice:', err.message);
+    }
   },
 
   /**

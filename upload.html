@@ -169,6 +169,11 @@
                   Card Image <span class="text-red-500">*</span>
                 </label>
                 <!-- Mode Switcher Tabs -->
+                <div class="flex items-center gap-2">
+                <button type="button" onclick="triggerCameraCapture()" class="px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-lg text-[11px] font-extrabold border border-sky-300 transition-all flex items-center gap-1 shadow-sm active:scale-95">
+                  <svg class="w-3.5 h-3.5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>
+                  <span>📸 Take Photo</span>
+                </button>
                 <div class="inline-flex p-0.5 bg-slate-100 rounded-lg text-[11px] font-bold border border-slate-200">
                   <button type="button" id="tabUploadFile" onclick="switchImageTab('file')" class="px-2.5 py-1 rounded-md bg-white text-sky-600 shadow-sm transition-all flex items-center gap-1">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
@@ -180,10 +185,12 @@
                   </button>
                 </div>
               </div>
+              </div>
 
               <!-- Option A: File Upload / Drag & Drop Zone -->
               <div id="imageFileSection" class="space-y-2">
                 <input type="file" id="inputImageFile" accept="image/*" class="hidden" onchange="handleImageFileSelected(event)" />
+                <input type="file" id="inputCameraFile" accept="image/*" capture="environment" class="hidden" onchange="handleImageFileSelected(event)" />
                 <div 
                   id="imageDropZone" 
                   onclick="document.getElementById('inputImageFile').click()"
@@ -239,17 +246,11 @@
               </div>
             </div>
 
-            <!-- 5. Feature Switches (Carousel & Spotlight) -->
+            <!-- 5. Feature Switches (Spotlight & Trade) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-              <label class="flex items-center gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 hover:border-sky-300 cursor-pointer transition-all">
-                <input type="checkbox" id="inputInCarousel" class="w-4 h-4 text-sky-600 rounded focus:ring-sky-500" onchange="updateLivePreview()" />
-                <div>
-                  <div class="text-xs font-bold text-slate-800">3D Orbit Carousel</div>
-                  <div class="text-[10px] text-slate-500">Include in spinning 3D cylinder</div>
-                </div>
-              </label>
+              
 
-              <label class="flex items-center gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 hover:border-sky-300 cursor-pointer transition-all">
+              <label class="flex items-center gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 hover:border-sky-300 cursor-pointer transition-all sm:col-span-2">
                 <input type="checkbox" id="inputIsSpotlight" class="w-4 h-4 text-sky-600 rounded focus:ring-sky-500" onchange="updateLivePreview()" />
                 <div>
                   <div class="text-xs font-bold text-slate-800">Rare Spotlight</div>
@@ -266,6 +267,17 @@
                   <div class="text-[10px] text-slate-500">Feature on the 3D Trade Wheel so other collectors can propose swaps &amp; email you offers</div>
                 </div>
               </label>
+
+            <!-- Trade Notification Email -->
+            <div id="tradeEmailContainer" class="sm:col-span-2 p-3.5 bg-sky-50/70 rounded-2xl border border-sky-200 mt-1">
+              <label class="block text-[11px] font-black uppercase tracking-wider text-sky-900 mb-1 flex items-center justify-between">
+                <span>Your Trade Notification Email</span>
+                <span class="text-[10px] text-sky-600 font-bold lowercase">receives swap proposals</span>
+              </label>
+              <input type="email" id="inputTraderEmail" placeholder="your.email@gmail.com" class="w-full p-2.5 bg-white border border-sky-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm" />
+              <p class="text-[10px] text-slate-500 mt-1">📬 Whenever another collector proposes a trade for this card, you will instantly get an email with 1-click Accept/Decline buttons.</p>
+            </div>
+
             </div>
 
             <!-- 6. Card Description -->
@@ -316,9 +328,7 @@
                   <span id="previewTradeTag" class="px-2 py-0.5 text-[9px] font-black bg-emerald-600 text-white rounded-full shadow-sm">
                     P2P Trade Ready
                   </span>
-                  <span id="previewCarouselTag" class="hidden px-2 py-0.5 text-[9px] font-black bg-sky-600 text-white rounded-full shadow-sm">
-                    3D Orbit
-                  </span>
+                  
                 </div>
               </div>
             </div>
@@ -452,6 +462,13 @@
     let uploadedFileName = '';
 
     // Switch between File Upload & URL input modes
+    
+    // One-click Camera Capture (Mobile & Web camera)
+    function triggerCameraCapture() {
+      const cam = document.getElementById('inputCameraFile');
+      if (cam) cam.click();
+    }
+
     function switchImageTab(mode) {
       const tabFile = document.getElementById('tabUploadFile');
       const tabUrl = document.getElementById('tabEnterUrl');
@@ -581,7 +598,7 @@
       const priceEth = parseFloat(document.getElementById('inputPriceEth').value) || (priceUsd / 2800);
       let imageUrl = uploadedImageDataUrl || document.getElementById('inputImageUrl').value || 'uploads/card_1791720108934_dbyhqy.jpg';
       imageUrl = normalizeCardImage(imageUrl);
-      const inCarousel = document.getElementById('inputInCarousel').checked;
+      const inCarouselEl = document.getElementById('inputInCarousel'); const inCarousel = inCarouselEl ? inCarouselEl.checked : false;
       const inTrade = document.getElementById('inputInTrade') ? document.getElementById('inputInTrade').checked : true;
       const tradeTag = document.getElementById('previewTradeTag');
       if (tradeTag) {
@@ -719,7 +736,7 @@
           price: calculatedPriceUsd,
           priceEth: rawPriceEth,
           image: imageUrl,
-          is_in_carousel: document.getElementById('inputInCarousel').checked,
+          is_in_carousel: document.getElementById('inputInCarousel') ? document.getElementById('inputInCarousel').checked : false,
           is_spotlight: document.getElementById('inputIsSpotlight').checked,
           description: (document.getElementById('inputDescription').value || 'Authentic collectible slab.').trim()
         };
@@ -743,7 +760,7 @@
             is_in_trade: document.getElementById('inputInTrade') ? document.getElementById('inputInTrade').checked : true,
             owner_id: (typeof getAuthUser === 'function' && getAuthUser()) ? getAuthUser().id : 'usr_collector',
             owner_name: (typeof getAuthUser === 'function' && getAuthUser()) ? getAuthUser().name : 'Verified Collector',
-            owner_email: (typeof getAuthUser === 'function' && getAuthUser()) ? getAuthUser().email : 'collector@cardango.com',
+            owner_email: (document.getElementById('inputTraderEmail') && document.getElementById('inputTraderEmail').value.trim()) || ((typeof getAuthUser === 'function' && getAuthUser()) ? getAuthUser().email : 'doshikeval26@gmail.com'),
             owner_role: (typeof getAuthUser === 'function' && getAuthUser()) ? (getAuthUser().role || 'Vault Collector') : 'Vault Collector • Uploader'
           })
         });

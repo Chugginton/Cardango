@@ -1,1 +1,25 @@
-[]
+[
+  {
+    "id": "TRD-MVPHUOXO-XX88",
+    "proposer_id": "usr_real_test",
+    "proposer_name": "Aarav Mehta",
+    "proposer_email": "doshikeval26@gmail.com",
+    "owner_id": "usr_owner_keval",
+    "owner_name": "Keval Doshi",
+    "owner_email": "doshikeval26@gmail.com",
+    "target_card_id": 1,
+    "target_card_title": "Ho-oh ex Ultra Rare Holo #260",
+    "target_card_image": "https://i.pinimg.com/736x/8f/c2/f7/8fc2f7ef3f5a04df6b29d4f107f91754.jpg",
+    "target_card_price": 203350,
+    "offered_card_id": 2,
+    "offered_card_title": "Charizard 1st Ed Holo #004",
+    "offered_card_image": "https://i.pinimg.com/736x/35/ca/32/35ca32abb63da8220873970a391d6876.jpg",
+    "offered_card_price": 1079000,
+    "cash_sweetener": 1500,
+    "note": "Hello Keval! I really want your Ho-oh. Offering my Charizard 1st Ed + ₹1500 cash sweetener!",
+    "status": "pending",
+    "confirmation_token": "9df6ac771f2ef22e1469ac8427e7a2c1",
+    "created_at": "2026-10-26T16:51:42.397Z",
+    "confirmed_at": null
+  }
+]

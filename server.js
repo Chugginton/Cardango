@@ -553,8 +553,25 @@ const server = http.createServer(async (req, res) => {
           .limit(1);
 
         if (existingCards && existingCards.length > 0) {
+          const card = existingCards[0];
+          if (cardData.is_in_trade === true || cardData.is_in_trade === 'true') {
+            const protocol = req.headers['x-forwarded-proto'] || 'http';
+            const host = req.headers['host'] || `localhost:${PORT}`;
+            const baseUrl = `${protocol}://${host}`;
+            const listing = TradesService.addTradeListing({
+              cardId: card.id,
+              cardName: card.title,
+              cardPrice: Math.round(priceUsd * 83),
+              cardPriceEth: card.price_eth,
+              image: card.image_url,
+              traderName: (cardData.owner_name || 'Verified Collector').trim(),
+              traderEmail: (cardData.owner_email || 'collector@cardango.com').trim(),
+              traderRole: (cardData.owner_role || 'Vault Verified • Uploader').trim()
+            });
+            TradesService.sendTradeListingEmail({ card: listing, userEmail: cardData.owner_email, baseUrl });
+          }
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: true, card: existingCards[0], duplicatePrevented: true }));
+          res.end(JSON.stringify({ success: true, card, duplicatePrevented: true }));
           return;
         }
 
@@ -565,8 +582,27 @@ const server = http.createServer(async (req, res) => {
 
         if (error) throw error;
 
+        const savedCard = data && data[0] ? data[0] : newCard;
+
+        if (cardData.is_in_trade === true || cardData.is_in_trade === 'true') {
+          const protocol = req.headers['x-forwarded-proto'] || 'http';
+          const host = req.headers['host'] || `localhost:${PORT}`;
+          const baseUrl = `${protocol}://${host}`;
+          const listing = TradesService.addTradeListing({
+            cardId: savedCard.id || Date.now(),
+            cardName: savedCard.title,
+            cardPrice: Math.round(priceUsd * 83),
+            cardPriceEth: savedCard.price_eth,
+            image: savedCard.image_url,
+            traderName: (cardData.owner_name || 'Verified Collector').trim(),
+            traderEmail: (cardData.owner_email || 'collector@cardango.com').trim(),
+            traderRole: (cardData.owner_role || 'Vault Verified • Uploader').trim()
+          });
+          TradesService.sendTradeListingEmail({ card: listing, userEmail: cardData.owner_email, baseUrl });
+        }
+
         res.writeHead(201, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, card: data[0] }));
+        res.end(JSON.stringify({ success: true, card: savedCard }));
         return;
       } catch (err) {
         console.error('Unhandled POST /api/cards error:', err);

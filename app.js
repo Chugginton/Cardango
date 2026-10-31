@@ -1894,23 +1894,47 @@ function renderSavedCollection() {
   init3DTilt();
 }
 
+let activeToastTimeout = null;
+let lastToastMessage = '';
+let lastToastTime = 0;
+
 function showToast(message) {
+  if (!message) return;
+  const now = Date.now();
+  // Prevent duplicate toast spam within 1.5 seconds
+  if (message === lastToastMessage && (now - lastToastTime) < 1500) {
+    return;
+  }
+  lastToastMessage = message;
+  lastToastTime = now;
+
+  let existingToast = document.getElementById('cardangoGlobalToast');
+  if (existingToast) {
+    existingToast.remove();
+    if (activeToastTimeout) clearTimeout(activeToastTimeout);
+  }
+
   const toast = document.createElement('div');
-  toast.className = 'fixed bottom-4 right-4 z-50 px-4 py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl shadow-2xl border border-sky-400 flex items-center gap-2 transform translate-y-10 opacity-0 transition-all duration-300';
+  toast.id = 'cardangoGlobalToast';
+  toast.className = 'fixed bottom-4 right-4 z-50 px-4 py-2.5 bg-slate-900/95 backdrop-blur-md text-white text-xs font-bold rounded-xl shadow-2xl border border-sky-400 flex items-center gap-2 transform translate-y-6 opacity-0 transition-all duration-200 pointer-events-none select-none';
   toast.innerHTML = `
-    <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+    <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
     <span>${message}</span>
   `;
   document.body.appendChild(toast);
 
-  setTimeout(() => {
-    toast.classList.remove('translate-y-10', 'opacity-0');
-  }, 50);
+  requestAnimationFrame(() => {
+    toast.classList.remove('translate-y-6', 'opacity-0');
+  });
 
-  setTimeout(() => {
-    toast.classList.add('translate-y-10', 'opacity-0');
-    setTimeout(() => toast.remove(), 300);
-  }, 3500);
+  activeToastTimeout = setTimeout(() => {
+    if (toast && toast.parentNode) {
+      toast.classList.add('translate-y-6', 'opacity-0');
+      setTimeout(() => {
+        if (toast && toast.parentNode) toast.remove();
+      }, 250);
+    }
+  }, 3000);
 }
 
 // ==========================================
