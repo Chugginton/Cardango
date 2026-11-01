@@ -1,838 +1,77 @@
 /**
- * CARDANGO Backend Server & Card Upload API
- * Uses Supabase as the single source of truth for both:
- * 1. Database table records ('cards')
- * 2. Uploaded image storage bucket ('cards')
+ * CARDANGO Backend — Entry Point
+ *
+ * Thin dispatcher that delegates to route modules:
+ *   routes/auth.js   → /api/health, /api/auth/*, /api/user/sync
+ *   routes/cards.js  → /api/cards, /api/upload-image, /api/upload-image-url
+ *   routes/trades.js → /api/trades/*
+ *   routes/export.js → /api/export-sql
+ *
+ * Static files are served from the project root directory.
  */
 
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const http = require('http');
-const fs = require('fs');
-const crypto = require('crypto');
-const { createClient } = require('@supabase/supabase-js');
-const TradesService = require('./trades_service');
+const fs   = require('fs');
 
-// 1. Initialize Supabase Client
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xaathyktqbysmbioxdxu.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_KEY;
+const { setCors } = require('./lib/middleware');
 
-if (!SUPABASE_KEY) {
-  console.error('ERROR: SUPABASE_KEY is missing from your .env file!');
-}
+// Route modules
+const authRoutes   = require('./routes/auth');
+const cardsRoutes  = require('./routes/cards');
+const tradesRoutes = require('./routes/trades');
+const exportRoutes = require('./routes/export');
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-const PORT = process.env.PORT || 3000;
-
-// ==================== AUTHENTICATION & USERS ====================
-const LOCAL_USERS_STORE = [];
-const ACTIVE_SESSIONS = new Map();
-
-function sanitizeUser(user) {
-  if (!user) return null;
-  const { password, ...safe } = user;
-  return safe;
-}
-
-// ==================== SUPABASE STORAGE HELPERS ====================
-
-// Upload base64 image directly to Supabase Storage bucket 'cards'
-async function uploadBase64ToSupabase(dataString) {
-  if (!dataString || typeof dataString !== 'string') return null;
-  const matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-  if (!matches || matches.length !== 3) return null;
-
-  const contentType = matches[1].toLowerCase();
-  let ext = '.png';
-  if (contentType.includes('jpeg') || contentType.includes('jpg')) ext = '.jpg';
-  else if (contentType.includes('webp')) ext = '.webp';
-  else if (contentType.includes('gif')) ext = '.gif';
-  else if (contentType.includes('svg')) ext = '.svg';
-
-  const filename = `card_${Date.now()}_${Math.random().toString(36).substring(2, 8)}${ext}`;
-  const buffer = Buffer.from(matches[2], 'base64');
-
-  const { error } = await supabase.storage
-    .from('cards')
-    .upload(filename, buffer, {
-      contentType,
-      upsert: false
-    });
-
-  if (error) {
-    console.error('Supabase storage upload error:', error.message);
-    throw error;
-  }
-
-  const { data: publicUrlData } = supabase.storage
-    .from('cards')
-    .getPublicUrl(filename);
-
-  return publicUrlData.publicUrl;
-}
-
-// Download remote image and store it in Supabase Storage bucket 'cards'
-async function downloadAndUploadUrlToSupabase(imageUrl) {
-  if (!imageUrl || typeof imageUrl !== 'string') return imageUrl;
-  if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) return imageUrl;
-
-  return new Promise((resolve) => {
-    try {
-      const parsed = new URL(imageUrl);
-      const client = parsed.protocol === 'https:' ? require('https') : require('http');
-
-      const req = client.get(imageUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
-        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-          return downloadAndUploadUrlToSupabase(res.headers.location).then(resolve);
-        }
-        if (res.statusCode !== 200) {
-          return resolve(imageUrl);
-        }
-
-        const chunks = [];
-        res.on('data', chunk => chunks.push(chunk));
-        res.on('end', async () => {
-          const buffer = Buffer.concat(chunks);
-          const contentType = (res.headers['content-type'] || 'image/jpeg').toLowerCase();
-          let ext = '.jpg';
-          if (contentType.includes('png')) ext = '.png';
-          else if (contentType.includes('webp')) ext = '.webp';
-          else if (contentType.includes('gif')) ext = '.gif';
-
-          const filename = `card_${Date.now()}_${Math.random().toString(36).substring(2, 8)}${ext}`;
-
-          const { error } = await supabase.storage
-            .from('cards')
-            .upload(filename, buffer, {
-              contentType,
-              upsert: false
-            });
-
-          if (error) {
-            console.warn('Storage upload fallback:', error.message);
-            return resolve(imageUrl);
-          }
-
-          const { data: publicUrlData } = supabase.storage
-            .from('cards')
-            .getPublicUrl(filename);
-
-          resolve(publicUrlData.publicUrl);
-        });
-      });
-
-      req.on('error', () => resolve(imageUrl));
-      req.setTimeout(8000, () => { req.destroy(); resolve(imageUrl); });
-    } catch (e) {
-      resolve(imageUrl);
-    }
-  });
-}
-
-// ==================== MIME TYPES ====================
+// ── MIME types for static file serving ──────────────────────────────────────
 const MIME_TYPES = {
   '.html': 'text/html',
-  '.css': 'text/css',
-  '.js': 'application/javascript',
+  '.css':  'text/css',
+  '.js':   'application/javascript',
   '.json': 'application/json',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
+  '.png':  'image/png',
+  '.jpg':  'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
-  '.gif': 'image/gif',
-  '.svg': 'image/svg+xml',
-  '.sql': 'text/plain'
+  '.gif':  'image/gif',
+  '.svg':  'image/svg+xml',
+  '.sql':  'text/plain'
 };
 
-// ==================== HTTP SERVER ====================
+const PORT = process.env.PORT || 3000;
+
+// ── HTTP server ──────────────────────────────────────────────────────────────
 const server = http.createServer(async (req, res) => {
-  const reqUrl = new URL(req.url, 'http://' + (req.headers.host || 'localhost'));
+  const reqUrl   = new URL(req.url, 'http://' + (req.headers.host || 'localhost'));
   const pathname = reqUrl.pathname;
 
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
+  // CORS preflight
+  setCors(res);
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
     res.end();
     return;
   }
 
-  // ==================== AUTHENTICATION API ROUTES ====================
-
-  // GET /api/health - Health check endpoint for Render
-  if (req.method === 'GET' && (pathname === '/api/health' || pathname === '/health')) {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'ok', uptime: process.uptime(), timestamp: new Date().toISOString() }));
-    return;
-  }
-
-  // POST /api/auth/register - Register new collector account
-  if (req.method === 'POST' && pathname === '/api/auth/register') {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
-    req.on('end', async () => {
-      try {
-        const payload = JSON.parse(body || '{}');
-        const name = (payload.name || '').trim();
-        const email = (payload.email || '').trim().toLowerCase();
-        const password = (payload.password || '').trim();
-        const avatar = payload.avatar || ``;
-
-        if (!name || !email || !password) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Name, email, and password are required' }));
-          return;
-        }
-
-        if (password.length < 6) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Password must be at least 6 characters' }));
-          return;
-        }
-
-        const existing = LOCAL_USERS_STORE.find(u => u.email === email);
-        if (existing) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'An account with this email already exists' }));
-          return;
-        }
-
-        // Try Supabase auth if configured
-        try {
-          await supabase.auth.signUp({
-            email,
-            password,
-            options: { data: { name, avatar, role: 'Verified Collector' } }
-          });
-        } catch (supaAuthErr) {
-          console.warn('Supabase auth signup notice:', supaAuthErr.message);
-        }
-
-        const newUser = {
-          id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-          name,
-          email,
-          password,
-          role: 'Verified Collector',
-          avatar,
-          balanceUsd: 1500,
-          balanceEth: 0.52,
-          createdAt: new Date().toISOString()
-        };
-
-        LOCAL_USERS_STORE.push(newUser);
-        const token = crypto.randomBytes(24).toString('hex');
-        ACTIVE_SESSIONS.set(token, newUser);
-
-        res.writeHead(201, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, user: sanitizeUser(newUser), token }));
-      } catch (err) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Registration error: ' + err.message }));
-      }
-    });
-    return;
-  }
-
-  if (req.method === 'POST' && pathname === '/api/auth/login') {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
-    req.on('end', async () => {
-      try {
-        const payload = JSON.parse(body || '{}');
-        const email = (payload.email || '').trim().toLowerCase();
-        const password = (payload.password || '').trim();
-
-        if (!email || !password) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Email and password are required' }));
-          return;
-        }
-
-        // 1. Try Supabase Auth
-        let supaUser = null;
-        try {
-          const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-          if (!error && data && data.user) {
-            supaUser = {
-              id: data.user.id,
-              name: data.user.user_metadata?.name || email.split('@')[0],
-              email: data.user.email,
-              role: data.user.user_metadata?.role || 'Verified Collector',
-              avatar: data.user.user_metadata?.avatar || '',
-              balanceUsd: 2500,
-              balanceEth: 0.95
-            };
-          }
-        } catch (supaErr) {
-          // Fall back to local store
-        }
-
-        if (supaUser) {
-          const token = crypto.randomBytes(24).toString('hex');
-          ACTIVE_SESSIONS.set(token, supaUser);
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: true, user: supaUser, token }));
-          return;
-        }
-
-        // 2. Check Local / Demo store fallback
-        const localUser = LOCAL_USERS_STORE.find(u => u.email === email && u.password === password);
-        if (!localUser) {
-          res.writeHead(401, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Invalid email or password' }));
-          return;
-        }
-
-        const token = crypto.randomBytes(24).toString('hex');
-        ACTIVE_SESSIONS.set(token, localUser);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, user: sanitizeUser(localUser), token }));
-      } catch (err) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Login error: ' + err.message }));
-      }
-    });
-    return;
-  }
-
-  // GET /api/auth/me - Verify current session
-  if (req.method === 'GET' && pathname === '/api/auth/me') {
-    const authHeader = req.headers['authorization'] || '';
-    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-
-    if (token && ACTIVE_SESSIONS.has(token)) {
-      const user = ACTIVE_SESSIONS.get(token);
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, user: sanitizeUser(user) }));
-      return;
-    }
-
-    res.writeHead(401, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Unauthorized or session expired' }));
-    return;
-  }
-
-  // GET /api/user/sync - Get current user's synced cart and collection
-  if (req.method === 'GET' && pathname === '/api/user/sync') {
-    const authHeader = req.headers['authorization'] || '';
-    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-
-    if (token && ACTIVE_SESSIONS.has(token)) {
-      const user = ACTIVE_SESSIONS.get(token);
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-        success: true,
-        cart: user.cart || [],
-        collection: user.collection || [],
-        orders: user.orders || []
-      }));
-      return;
-    }
-
-    res.writeHead(401, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Unauthorized' }));
-    return;
-  }
-
-  // POST /api/user/sync - Save current user's cart and collection
-  if (req.method === 'POST' && pathname === '/api/user/sync') {
-    const authHeader = req.headers['authorization'] || '';
-    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-
-    if (token && ACTIVE_SESSIONS.has(token)) {
-      const user = ACTIVE_SESSIONS.get(token);
-      let body = '';
-      req.on('data', chunk => { body += chunk; });
-      req.on('end', () => {
-        try {
-          const payload = JSON.parse(body || '{}');
-          if (Array.isArray(payload.cart)) user.cart = payload.cart;
-          if (Array.isArray(payload.collection)) user.collection = payload.collection;
-          if (Array.isArray(payload.orders)) user.orders = payload.orders;
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: true }));
-        } catch (e) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
-        }
-      });
-      return;
-    }
-
-    res.writeHead(401, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Unauthorized' }));
-    return;
-  }
-
-  // POST /api/auth/logout - Terminate session
-  if (req.method === 'POST' && pathname === '/api/auth/logout') {
-    const authHeader = req.headers['authorization'] || '';
-    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-    if (token) {
-      ACTIVE_SESSIONS.delete(token);
-    }
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ success: true }));
-    return;
-  }
-
-  // ==================== CARD & STORAGE API ROUTES ====================
-
-  // 1. GET /api/cards - List cards with filtering from Supabase
-  if (req.method === 'GET' && pathname === '/api/cards') {
-    const category = reqUrl.searchParams.get('category');
-    const search = (reqUrl.searchParams.get('search') || '').trim();
-    const inCarousel = reqUrl.searchParams.get('carousel') === 'true';
-
-    try {
-      let query = supabase.from('cards').select('*').order('id', { ascending: true });
-
-      if (category && category !== 'all') {
-        query = query.eq('category', category);
-      }
-      if (inCarousel) {
-        query = query.eq('is_in_carousel', true);
-      }
-      if (search) {
-        query = query.ilike('title', `%${search}%`);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(data || []));
-      return;
-    } catch (dbErr) {
+  // ── API routing ────────────────────────────────────────────────────────────
+  try {
+    if (await authRoutes.handle(req, res, pathname))             return;
+    if (await cardsRoutes.handle(req, res, pathname, reqUrl))    return;
+    if (await tradesRoutes.handle(req, res, pathname, reqUrl))   return;
+    if (await exportRoutes.handle(req, res, pathname))           return;
+  } catch (err) {
+    console.error('Unhandled route error:', err);
+    if (!res.headersSent) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Supabase error: ' + dbErr.message }));
-      return;
-    }
-  }
-
-  // 2. POST /api/upload-image - Upload Base64 Image to Supabase Storage
-  if (req.method === 'POST' && pathname === '/api/upload-image') {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
-    req.on('end', async () => {
-      try {
-        const payload = JSON.parse(body);
-        const imageUrl = await uploadBase64ToSupabase(payload.data || payload.image);
-        if (!imageUrl) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Invalid or missing image data' }));
-          return;
-        }
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, url: imageUrl }));
-      } catch (err) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Failed to process image: ' + err.message }));
-      }
-    });
-    return;
-  }
-
-  // 3. POST /api/upload-image-url - Download & Cache Remote Image into Supabase Storage
-  if (req.method === 'POST' && pathname === '/api/upload-image-url') {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
-    req.on('end', async () => {
-      try {
-        const payload = JSON.parse(body);
-        if (!payload.url) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Missing image URL' }));
-          return;
-        }
-        const savedUrl = await downloadAndUploadUrlToSupabase(payload.url);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, url: savedUrl }));
-      } catch (err) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Failed to download image: ' + err.message }));
-      }
-    });
-    return;
-  }
-
-  // 4. POST /api/cards - Upload & Insert Card into Supabase
-  if (req.method === 'POST' && pathname === '/api/cards') {
-    let body = '';
-    const MAX_PAYLOAD_SIZE = 10 * 1024 * 1024; // 10MB limit
-
-    req.on('data', chunk => {
-      body += chunk;
-      if (body.length > MAX_PAYLOAD_SIZE) {
-        res.writeHead(413, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Payload too large (Max 10MB)' }));
-        req.destroy();
-      }
-    });
-
-    req.on('error', (streamErr) => {
-      console.error('Request stream error:', streamErr);
-      if (!res.headersSent) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Upload stream interrupted' }));
-      }
-    });
-
-    req.on('end', async () => {
-      try {
-        let cardData;
-        try {
-          cardData = JSON.parse(body);
-        } catch (jsonErr) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Malformed JSON payload' }));
-          return;
-        }
-
-        const validCategories = ['dev', 'pokemon', 'anime', 'cricket', 'football'];
-        const rawCategory = (cardData.category || '').toLowerCase().trim();
-
-        if (!cardData.title || !rawCategory || cardData.price_usd == null || !cardData.image_url) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Missing required card fields: title, category, price_usd, image_url' }));
-          return;
-        }
-
-        if (!validCategories.includes(rawCategory)) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: `Invalid category. Must be one of: ${validCategories.join(', ')}` }));
-          return;
-        }
-
-        const priceUsd = Number(cardData.price_usd);
-        if (Number.isNaN(priceUsd) || priceUsd < 0) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Price (USD) must be a valid positive number' }));
-          return;
-        }
-
-        const calculatedEth = cardData.price_eth 
-          ? Number(cardData.price_eth) 
-          : Number((priceUsd / 2800).toFixed(4));
-
-        let finalImageUrl = cardData.image_url;
-        try {
-          if (finalImageUrl.startsWith('data:image/')) {
-            const savedUrl = await uploadBase64ToSupabase(finalImageUrl);
-            if (savedUrl) finalImageUrl = savedUrl;
-          } else if (finalImageUrl.startsWith('http://') || finalImageUrl.startsWith('https://')) {
-            const cachedUrl = await downloadAndUploadUrlToSupabase(finalImageUrl);
-            if (cachedUrl) finalImageUrl = cachedUrl;
-          }
-        } catch (imgErr) {
-          console.warn('Image storage error, using raw URL:', imgErr.message);
-        }
-
-        const newCard = {
-          title: String(cardData.title).trim(),
-          category: rawCategory,
-          price_usd: priceUsd,
-          price_eth: Number.isNaN(calculatedEth) ? 0 : calculatedEth,
-          image_url: finalImageUrl,
-          is_in_carousel: cardData.is_in_carousel === true || cardData.is_in_carousel === 'true',
-          is_spotlight: cardData.is_spotlight === true || cardData.is_spotlight === 'true',
-          description: String(cardData.description || 'Authentic collectible slab.').trim()
-        };
-
-        // Check if card with same title and category already exists in Supabase
-        const { data: existingCards } = await supabase
-          .from('cards')
-          .select('*')
-          .ilike('title', newCard.title)
-          .eq('category', newCard.category)
-          .limit(1);
-
-        if (existingCards && existingCards.length > 0) {
-          const card = existingCards[0];
-          if (cardData.is_in_trade === true || cardData.is_in_trade === 'true') {
-            const protocol = req.headers['x-forwarded-proto'] || 'http';
-            const host = req.headers['host'] || `localhost:${PORT}`;
-            const baseUrl = `${protocol}://${host}`;
-            const listing = TradesService.addTradeListing({
-              cardId: card.id,
-              cardName: card.title,
-              cardPrice: Math.round(priceUsd * 83),
-              cardPriceEth: card.price_eth,
-              image: card.image_url,
-              traderName: (cardData.owner_name || 'Verified Collector').trim(),
-              traderEmail: (cardData.owner_email || 'collector@cardango.com').trim(),
-              traderRole: (cardData.owner_role || 'Vault Verified • Uploader').trim()
-            });
-            TradesService.sendTradeListingEmail({ card: listing, userEmail: cardData.owner_email, baseUrl });
-          }
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: true, card, duplicatePrevented: true }));
-          return;
-        }
-
-        const { data, error } = await supabase
-          .from('cards')
-          .insert([newCard])
-          .select();
-
-        if (error) throw error;
-
-        const savedCard = data && data[0] ? data[0] : newCard;
-
-        if (cardData.is_in_trade === true || cardData.is_in_trade === 'true') {
-          const protocol = req.headers['x-forwarded-proto'] || 'http';
-          const host = req.headers['host'] || `localhost:${PORT}`;
-          const baseUrl = `${protocol}://${host}`;
-          const listing = TradesService.addTradeListing({
-            cardId: savedCard.id || Date.now(),
-            cardName: savedCard.title,
-            cardPrice: Math.round(priceUsd * 83),
-            cardPriceEth: savedCard.price_eth,
-            image: savedCard.image_url,
-            traderName: (cardData.owner_name || 'Verified Collector').trim(),
-            traderEmail: (cardData.owner_email || 'collector@cardango.com').trim(),
-            traderRole: (cardData.owner_role || 'Vault Verified • Uploader').trim()
-          });
-          TradesService.sendTradeListingEmail({ card: listing, userEmail: cardData.owner_email, baseUrl });
-        }
-
-        res.writeHead(201, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, card: savedCard }));
-        return;
-      } catch (err) {
-        console.error('Unhandled POST /api/cards error:', err);
-        if (!res.headersSent) {
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Failed to save card: ' + err.message }));
-        }
-      }
-    });
-    return;
-  }
-
-  // 5. DELETE /api/cards/:id - Delete card from Supabase
-  if (req.method === 'DELETE' && pathname.startsWith('/api/cards/')) {
-    const cardId = pathname.replace('/api/cards/', '').trim();
-    if (cardId) {
-      try {
-        const { error } = await supabase.from('cards').delete().eq('id', cardId);
-        if (error) throw error;
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, deletedId: cardId }));
-        return;
-      } catch (delErr) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: delErr.message }));
-        return;
-      }
-    }
-  }
-
-  // 6. POST /api/cards/delete-by-title - Delete duplicate cards by title
-  if (req.method === 'POST' && pathname === '/api/cards/delete-by-title') {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
-    req.on('end', async () => {
-      try {
-        const { title } = JSON.parse(body || '{}');
-        if (!title) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Title required' }));
-          return;
-        }
-        const { data, error } = await supabase.from('cards').delete().ilike('title', title.trim()).select();
-        if (error) throw error;
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, deleted: data }));
-      } catch (err) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: err.message }));
-      }
-    });
-    return;
-  }
-
-  // 7. GET /api/export-sql - Generate SQL INSERTs directly from Supabase
-  if (req.method === 'GET' && pathname === '/api/export-sql') {
-    try {
-      const { data: rows, error } = await supabase
-        .from('cards')
-        .select('*')
-        .order('id', { ascending: true });
-
-      if (error) throw error;
-
-      const sqlStatements = (rows || []).map(c => {
-        const escape = s => String(s || '').replace(/'/g, "''");
-        return `INSERT INTO cards (title, category, price_usd, price_eth, image_url, is_in_carousel, is_spotlight, description) VALUES ('${escape(c.title)}', '${escape(c.category)}', ${c.price_usd}, ${c.price_eth}, '${escape(c.image_url)}', ${c.is_in_carousel ? 'TRUE' : 'FALSE'}, ${c.is_spotlight ? 'TRUE' : 'FALSE'}, '${escape(c.description)}');`;
-      }).join('\n\n');
-
-      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end(sqlStatements);
-      return;
-    } catch (exportErr) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Database error: ' + exportErr.message }));
-      return;
-    }
-  }
-
-    // ==================== P2P TRADE & OFFER API ROUTES ====================
-
-  // 1. POST /api/trades/propose - Submit new trade proposal & send emails
-  if (req.method === 'POST' && pathname === '/api/trades/propose') {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
-    req.on('end', async () => {
-      try {
-        const payload = JSON.parse(body || '{}');
-        const protocol = req.headers['x-forwarded-proto'] || 'http';
-        const host = req.headers['host'] || `localhost:${PORT}`;
-        const baseUrl = `${protocol}://${host}`;
-
-        const result = await TradesService.createTradeProposal({
-          supabase,
-          payload,
-          baseUrl
-        });
-
-        res.writeHead(201, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-          success: true,
-          trade: result.trade,
-          emailPreviews: result.emailPreviews,
-          message: 'Trade proposal submitted to escrow and emails dispatched!'
-        }));
-      } catch (err) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: err.message }));
-      }
-    });
-    return;
-  }
-
-  // 2. GET /api/trades - List user or all trades
-  if (req.method === 'GET' && pathname === '/api/trades') {
-    const email = reqUrl.searchParams.get('email');
-    try {
-      const trades = await TradesService.listTrades({ email, supabase });
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, trades }));
-    } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: err.message }));
+      res.end(JSON.stringify({ error: 'Internal server error' }));
     }
     return;
   }
 
-  // 3. GET & POST /api/trades/accept - Confirm/Accept trade
-  if ((req.method === 'GET' || req.method === 'POST') && pathname === '/api/trades/accept') {
-    const tradeId = reqUrl.searchParams.get('id');
-    const token = reqUrl.searchParams.get('token');
-    const protocol = req.headers['x-forwarded-proto'] || 'http';
-    const host = req.headers['host'] || `localhost:${PORT}`;
-    const baseUrl = `${protocol}://${host}`;
-
-    try {
-      const result = await TradesService.acceptTrade({
-        tradeId,
-        token,
-        supabase,
-        baseUrl
-      });
-
-      if (req.method === 'GET') {
-        res.writeHead(302, { Location: `/trade.html?tradeConfirmed=${encodeURIComponent(tradeId)}` });
-        res.end();
-        return;
-      }
-
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(result));
-    } catch (err) {
-      if (req.method === 'GET') {
-        res.writeHead(400, { 'Content-Type': 'text/html' });
-        res.end(`<h2>Trade Error: ${err.message}</h2><p><a href="/trade.html">Return to CARDANGO</a></p>`);
-        return;
-      }
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: err.message }));
-    }
-    return;
-  }
-
-  // 4. GET & POST /api/trades/decline - Decline trade
-  if ((req.method === 'GET' || req.method === 'POST') && pathname === '/api/trades/decline') {
-    const tradeId = reqUrl.searchParams.get('id');
-    const token = reqUrl.searchParams.get('token');
-
-    try {
-      const result = await TradesService.declineTrade({
-        tradeId,
-        token,
-        supabase
-      });
-
-      if (req.method === 'GET') {
-        res.writeHead(302, { Location: `/trade.html?tradeDeclined=${encodeURIComponent(tradeId)}` });
-        res.end();
-        return;
-      }
-
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(result));
-    } catch (err) {
-      if (req.method === 'GET') {
-        res.writeHead(400, { 'Content-Type': 'text/html' });
-        res.end(`<h2>Trade Error: ${err.message}</h2><p><a href="/trade.html">Return to CARDANGO</a></p>`);
-        return;
-      }
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: err.message }));
-    }
-    return;
-  }
-
-  // 6. GET /api/trades/listings - Fetch live cards available on the 3D Trade Wheel
-  if (req.method === 'GET' && pathname === '/api/trades/listings') {
-    try {
-      const listings = TradesService.getTradeListings();
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, listings }));
-    } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: err.message }));
-    }
-    return;
-  }
-
-  // 5. GET /api/trades/detail - Get specific trade details
-  if (req.method === 'GET' && pathname === '/api/trades/detail') {
-    const tradeId = reqUrl.searchParams.get('id');
-    try {
-      const trade = await TradesService.getTrade(tradeId, supabase);
-      if (!trade) {
-        res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Trade not found' }));
-        return;
-      }
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, trade }));
-    } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: err.message }));
-    }
-    return;
-  }
-
-  // ==================== STATIC FILE SERVING ====================
+  // ── Static file serving ────────────────────────────────────────────────────
   if (pathname.startsWith('/.well-known/') || pathname === '/favicon.ico') {
-    let checkPath = path.join(__dirname, pathname);
+    const checkPath = path.join(__dirname, pathname);
     if (!fs.existsSync(checkPath)) {
       res.writeHead(404, { 'Content-Type': 'text/plain' });
       res.end('Not found');
@@ -845,7 +84,7 @@ const server = http.createServer(async (req, res) => {
     filePath = path.join(__dirname, 'index.html');
   }
 
-  const ext = path.extname(filePath).toLowerCase();
+  const ext         = path.extname(filePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
   fs.readFile(filePath, (err, content) => {
@@ -864,10 +103,5 @@ server.listen(PORT, () => {
   console.log(`  Local URL:   http://localhost:${PORT}`);
 });
 
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err.message);
-});
-
-process.on('unhandledRejection', (reason) => {
-  console.error('Unhandled Promise Rejection:', reason);
-});
+process.on('uncaughtException',   err => console.error('Uncaught Exception:', err.message));
+process.on('unhandledRejection',  reason => console.error('Unhandled Rejection:', reason));
