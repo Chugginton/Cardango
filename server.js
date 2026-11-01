@@ -18,6 +18,8 @@ const fs   = require('fs');
 
 const { setCors } = require('./lib/middleware');
 
+const PUBLIC_DIR = path.join(__dirname, 'public');
+
 // Route modules
 const authRoutes   = require('./routes/auth');
 const cardsRoutes  = require('./routes/cards');
@@ -71,7 +73,7 @@ const server = http.createServer(async (req, res) => {
 
   // ── Static file serving ────────────────────────────────────────────────────
   if (pathname.startsWith('/.well-known/') || pathname === '/favicon.ico') {
-    const checkPath = path.join(__dirname, pathname);
+    const checkPath = path.join(PUBLIC_DIR, pathname);
     if (!fs.existsSync(checkPath)) {
       res.writeHead(404, { 'Content-Type': 'text/plain' });
       res.end('Not found');
@@ -79,9 +81,9 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  let filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);
+  let filePath = path.join(PUBLIC_DIR, pathname === '/' ? 'index.html' : pathname);
   if (!fs.existsSync(filePath)) {
-    filePath = path.join(__dirname, 'index.html');
+    filePath = path.join(PUBLIC_DIR, 'index.html');
   }
 
   const ext         = path.extname(filePath).toLowerCase();
