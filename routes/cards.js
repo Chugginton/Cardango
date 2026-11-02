@@ -110,7 +110,7 @@ async function handle(req, res, pathname, reqUrl) {
 
       const calculatedEth = cardData.price_eth
         ? Number(cardData.price_eth)
-        : Number((priceUsd / 2800).toFixed(4));
+        : Number((priceUsd / (83 * 2800)).toFixed(6));
 
       // Persist image to Supabase Storage
       let finalImageUrl = cardData.image_url;
@@ -203,7 +203,7 @@ function _maybeCreateTradeListing(card, cardData, priceUsd, req, PORT) {
   const listing = TradesService.addTradeListing({
     cardId:      card.id || Date.now(),
     cardName:    card.title,
-    cardPrice:   Math.round(priceUsd * 83),
+    cardPrice:   priceUsd,  // already stored as INR
     cardPriceEth: card.price_eth,
     image:       card.image_url,
     traderName:  (cardData.owner_name  || 'Verified Collector').trim(),

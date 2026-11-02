@@ -576,8 +576,8 @@
       const title = (document.getElementById('inputTitle').value || 'New Collectible').trim();
       const category = document.getElementById('inputCategory').value;
       const priceInr = parseFloat(document.getElementById('inputPriceInr').value) || 83000;
-      const priceUsd = Number((priceInr / USD_TO_INR).toFixed(2));
-      const priceEth = parseFloat(document.getElementById('inputPriceEth').value) || Number((priceUsd / 2800).toFixed(4));
+      const priceUsd = priceInr;
+      const priceEth = parseFloat(document.getElementById('inputPriceEth').value) || Number((priceUsd / (USD_TO_INR * 2800)).toFixed(4));
       let imageUrl = uploadedImageDataUrl || document.getElementById('inputImageUrl').value || 'uploads/card_1791720108934_dbyhqy.jpg';
       imageUrl = normalizeCardImage(imageUrl);
 
@@ -594,7 +594,7 @@
       const title = document.getElementById('inputTitle').value || 'Card Title Preview';
       const category = document.getElementById('inputCategory').value;
       const priceInr = parseFloat(document.getElementById('inputPriceInr').value) || 0;
-      const priceUsd = priceInr / USD_TO_INR;
+      const priceUsd = priceInr;
       const priceEth = parseFloat(document.getElementById('inputPriceEth').value) || (priceUsd / 2800);
       let imageUrl = uploadedImageDataUrl || document.getElementById('inputImageUrl').value || 'uploads/card_1791720108934_dbyhqy.jpg';
       imageUrl = normalizeCardImage(imageUrl);
@@ -727,8 +727,8 @@
         imageUrl = normalizeCardImage(imageUrl);
 
         const rawPriceInr = parseFloat(document.getElementById('inputPriceInr').value) || 83000;
-        const calculatedPriceUsd = Number((rawPriceInr / USD_TO_INR).toFixed(2));
-        const rawPriceEth = parseFloat(document.getElementById('inputPriceEth').value) || Number((calculatedPriceUsd / 2800).toFixed(4));
+        const calculatedPriceUsd = rawPriceInr;
+        const rawPriceEth = parseFloat(document.getElementById('inputPriceEth').value) || Number((calculatedPriceUsd / (USD_TO_INR * 2800)).toFixed(4));
 
         const newCard = {
           title: (document.getElementById('inputTitle').value || 'Custom Collectible Slab').trim(),
