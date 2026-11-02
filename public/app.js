@@ -442,7 +442,7 @@ async function syncCardsWithBackend() {
             category: dbCard.category,
             categoryLabel: style.label,
             rarity: 'Mythic Rare',
-            price: parseFloat(dbCard.price_usd || dbCard.price || 100),
+            price: Math.round(parseFloat(dbCard.price_usd || dbCard.price || 100) * USD_TO_INR),
             priceEth: parseFloat(dbCard.price_eth || dbCard.priceEth || 0.05),
             image: normalizeCardImage(dbCard.image_url || dbCard.image),
             badgeColor: style.badgeColor,
