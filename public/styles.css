@@ -1,5 +1,19 @@
 /* CARDANGO Gabriel Beaugonin 3D Stack & Sky Blue Theme Styles */
 
+/* ── Characters banner marquee ───────────────────────────────────────────── */
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-33.333%); }
+}
+.animate-marquee {
+  animation: marquee 18s linear infinite;
+  will-change: transform;
+  min-width: max-content;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 :root {
