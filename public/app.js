@@ -244,6 +244,62 @@ const CARDS_DATA = [
     description: "Includes game-used jersey patch embed with certified provenance serial."
   },
   {
+    id: 101,
+    title: "Porsche 911 GT3 RS Weissach Package #992",
+    category: "supercars",
+    categoryLabel: "SUPERCAR SLAB",
+    rarity: "Mythic Rare",
+    edition: "1st Edition",
+    price: 3850,
+    priceEth: 1.35,
+    image: "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?w=800&auto=format&fit=crop&q=80",
+    badgeColor: "bg-rose-100 text-rose-800 border-rose-300",
+    cardAccent: "border-rose-500",
+    description: "Atmospheric 4.0L flat-six Nürburgring hero slab in shark blue with carbon aero disc wheels."
+  },
+  {
+    id: 102,
+    title: "Ferrari LaFerrari Aperta Rosso Corsa #01",
+    category: "supercars",
+    categoryLabel: "SUPERCAR SLAB",
+    rarity: "Mythic Rare",
+    edition: "1st Edition",
+    price: 4950,
+    priceEth: 1.75,
+    image: "https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&auto=format&fit=crop&q=80",
+    badgeColor: "bg-rose-100 text-rose-800 border-rose-300",
+    cardAccent: "border-rose-500",
+    description: "Maranello V12 HY-KERS flagship slab. 950 bhp collector commemorative in pristine optical grade."
+  },
+  {
+    id: 103,
+    title: "Nissan Skyline GT-R R34 V-Spec II Nismo #23",
+    category: "supercars",
+    categoryLabel: "SUPERCAR SLAB",
+    rarity: "Mythic Rare",
+    edition: "1st Edition",
+    price: 3200,
+    priceEth: 1.15,
+    image: "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=800&auto=format&fit=crop&q=80",
+    badgeColor: "bg-rose-100 text-rose-800 border-rose-300",
+    cardAccent: "border-rose-500",
+    description: "Bayside Blue RB26DETT twin-turbo JDM legend slab in pristine gem mint casing."
+  },
+  {
+    id: 104,
+    title: "Lamborghini Revuelto V12 Hybrid #63",
+    category: "supercars",
+    categoryLabel: "SUPERCAR SLAB",
+    rarity: "Mythic Rare",
+    edition: "1st Edition",
+    price: 4400,
+    priceEth: 1.55,
+    image: "https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?w=800&auto=format&fit=crop&q=80",
+    badgeColor: "bg-rose-100 text-rose-800 border-rose-300",
+    cardAccent: "border-rose-500",
+    description: "Sant'Agata Bolognese 1,001 hp HPEV bull commemorative slab with forged composite subgrade."
+  },
+  {
     id: 22,
     title: "Rust Kernel Hacker #08",
     category: "dev",
@@ -421,7 +477,8 @@ const CATEGORY_STYLE_MAP = {
   anime: { badgeColor: 'bg-purple-100 text-purple-800 border-purple-300', cardAccent: 'border-purple-500', label: 'ANIME CARD' },
   football: { badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300', cardAccent: 'border-emerald-500', label: 'FOOTBALL CARD' },
   cricket: { badgeColor: 'bg-sky-100 text-sky-800 border-sky-300', cardAccent: 'border-sky-500', label: 'CRICKET CARD' },
-  dev: { badgeColor: 'bg-indigo-100 text-indigo-800 border-indigo-300', cardAccent: 'border-indigo-500', label: 'DEV CARD' }
+  dev: { badgeColor: 'bg-indigo-100 text-indigo-800 border-indigo-300', cardAccent: 'border-indigo-500', label: 'DEV CARD' },
+  supercars: { badgeColor: 'bg-rose-100 text-rose-800 border-rose-300', cardAccent: 'border-rose-500', label: 'SUPERCAR SLAB' }
 };
 
 async function syncCardsWithBackend() {
@@ -473,6 +530,12 @@ async function syncCardsWithBackend() {
 
 // DOM Initialization
 document.addEventListener('DOMContentLoaded', () => {
+  try {
+    const urlCat = new URLSearchParams(window.location.search).get('category');
+    if (urlCat) {
+      activeCategory = urlCat.toLowerCase().trim();
+    }
+  } catch (e) {}
   initCardangoAuth();
   syncCardsWithBackend();
   updateCartBadge();
@@ -706,7 +769,7 @@ function renderMarketplaceGrid() {
 
   const filtered = CARDS_DATA.filter(card => {
     // 1. Category Filter
-    const matchesCategory = activeCategory === 'all' || card.category === activeCategory;
+    const matchesCategory = activeCategory === 'all' || card.category === activeCategory || (activeCategory === 'sports' && (card.category === 'cricket' || card.category === 'football'));
     
     // 2. Search Query Filter
     const matchesSearch = !searchQuery ||
@@ -1068,6 +1131,20 @@ function setupEventListeners() {
       renderMarketplaceGrid();
     });
   });
+
+  // Sync initial active button based on activeCategory (e.g. from World Map)
+  if (activeCategory && activeCategory !== 'all') {
+    document.querySelectorAll('[data-category-filter]').forEach(b => {
+      const bCat = b.getAttribute('data-category-filter');
+      if (bCat === activeCategory) {
+        b.classList.remove('bg-slate-50', 'text-slate-700', 'bg-white');
+        b.classList.add('bg-sky-600', 'text-white');
+      } else {
+        b.classList.remove('bg-sky-600', 'text-white');
+        b.classList.add('bg-slate-50', 'text-slate-700');
+      }
+    });
+  }
 
   // Price Slider Listener
   const priceSlider = document.getElementById('priceRangeSlider');

@@ -14,7 +14,7 @@ const { uploadBase64ToSupabase, downloadAndUploadUrlToSupabase } = require('../l
 const { readBody, json } = require('../lib/middleware');
 const TradesService = require('../trades_service');
 
-const VALID_CATEGORIES = ['dev', 'pokemon', 'anime', 'cricket', 'football'];
+const VALID_CATEGORIES = ['dev', 'pokemon', 'anime', 'cricket', 'football', 'supercars'];
 const MAX_PAYLOAD_SIZE = 10 * 1024 * 1024; // 10 MB
 
 async function handle(req, res, pathname, reqUrl) {

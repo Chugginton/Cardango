@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="h-full w-full overflow-hidden">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>CARDANGO</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
@@ -11,344 +11,374 @@
       theme: {
         extend: {
           colors: {
-            skybrand: {
-              50: '#f0f9ff',
-              100: '#e0f2fe',
-              500: '#0284c7',
-              600: '#0369a1',
+            ocean: {
+              400: '#10cfec',
+              500: '#00b8cc',
+              600: '#0097a7',
             }
           }
         }
       }
     }
   </script>
+  
   <link rel="stylesheet" href="styles.css">
+
+  <style>
+    /* Full-viewport canvas styling */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      background-color: #10cfec;
+      background-image: radial-gradient(rgba(14, 116, 144, 0.42) 2.5px, transparent 2.5px);
+      background-size: 28px 28px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    /* Fixed Map Container (Locked in place - does not move/drag) */
+    #mapStage {
+      position: relative;
+      width: 100%;
+      max-width: 1140px;
+      aspect-ratio: 1024 / 572;
+      margin: 0 auto;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    #mapStage img.map-base-image {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      user-select: none;
+      -webkit-user-drag: none;
+      filter: drop-shadow(0 20px 30px rgba(0, 40, 70, 0.22));
+    }
+
+    /* Hotspot Pill over Map Text */
+    .zone-hotspot {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      z-index: 25;
+      cursor: pointer;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease;
+      touch-action: manipulation;
+    }
+
+    .zone-hotspot:hover {
+      transform: translate(-50%, -50%) scale(1.08);
+      z-index: 35;
+    }
+
+    .zone-hotspot:active {
+      transform: translate(-50%, -50%) scale(0.96);
+    }
+
+    /* Hotspot pulse rings */
+    @keyframes pulseRing {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      70% { transform: scale(1.6); opacity: 0; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+    .pulse-beacon {
+      animation: pulseRing 2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+    }
+
+    /* Hotspot hover preview card */
+    .zone-preview-card {
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(8px) scale(0.95);
+      transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .zone-hotspot:hover .zone-preview-card {
+      pointer-events: auto;
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* Glass Panels */
+    .polecat-glass {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 16px 36px -10px rgba(0, 45, 80, 0.2), 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       SUBTLE GLITCH & SLIDE CARD TRANSITION (On Click)
+       ═══════════════════════════════════════════════════════ */
+    @keyframes pillGlitchTwitch {
+      0%   { transform: translate(-50%, -50%) scale(1); filter: none; }
+      20%  { transform: translate(-52%, -49%) scale(1.05); filter: drop-shadow(-2px 0 0 #00ffff) drop-shadow(2px 0 0 #ff007f); }
+      45%  { transform: translate(-48%, -51%) scale(1.03); filter: drop-shadow(2px 0 0 #00ffff) drop-shadow(-2px 0 0 #ff007f); }
+      70%  { transform: translate(-51%, -50%) scale(1.06); filter: none; }
+      100% { transform: translate(-50%, -50%) scale(1.04); filter: none; }
+    }
+
+    .glitch-active {
+      animation: pillGlitchTwitch 0.28s ease-in-out forwards !important;
+    }
+
+    /* Subtle Card Slide-In Toast Notification */
+    #cardSlideToast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 60;
+      transform: translateY(130%) scale(0.92);
+      opacity: 0;
+      transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+      pointer-events: none;
+    }
+
+    #cardSlideToast.active {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+
+    /* Scanline Glitch on card */
+    @keyframes scanlineSweep {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(200%); }
+    }
+    .scanline-effect {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.5), transparent);
+      animation: scanlineSweep 0.55s linear infinite;
+      pointer-events: none;
+    }
+  </style>
 </head>
-<body class="bg-[#f0f9ff] text-slate-900 antialiased min-h-screen">
+<body class="h-full w-full overflow-hidden select-none flex flex-col justify-between">
 
-  <div class="flex min-h-screen">
+  <!-- ==================== TOP NAVBAR ==================== -->
+  <header class="z-40 p-3 sm:p-4 flex items-center justify-between flex-shrink-0">
+    
+    <!-- Left: Logo ONLY (No 'World Map' text) -->
+    <div class="flex items-center">
+      <a href="index.html" class="flex items-center gap-2.5 bg-white/95 backdrop-blur-md px-3 sm:px-4 py-2 rounded-2xl border border-white/80 shadow-lg hover:scale-105 transition-all">
+        <img src="https://i.pinimg.com/1200x/da/6f/2c/da6f2c6782704e4120fc689f5da89482.jpg" alt="CARDANGO" class="w-8 h-8 rounded-full object-cover shadow-sm border border-sky-400" />
+        <span class="font-black text-sm tracking-tight text-slate-900">CARD<span class="text-sky-600">ANGO</span></span>
+      </a>
+    </div>
 
-    <aside class="w-20 sky-sidebar flex flex-col items-center py-6 px-2 flex-shrink-0 hidden lg:flex border-r border-sky-100">
-      <div class="space-y-8 flex flex-col items-center w-full">
-        
-        <div class="flex items-center justify-center">
-          <a href="index.html" class="flex items-center" title="CARDANGO">
-            <img src="https://i.pinimg.com/1200x/da/6f/2c/da6f2c6782704e4120fc689f5da89482.jpg" alt="Logo" class="w-10 h-10 rounded-full object-cover shadow-md border border-sky-400 hover:scale-105 transition-transform" />
+    <!-- Center: Main Navigation Dock (Desktop) -->
+    <nav class="hidden md:flex items-center gap-1 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/80 shadow-lg text-xs font-bold text-slate-600">
+      <a href="marketplace.html" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-700 hover:text-sky-600 hover:bg-sky-50 transition-all" title="View Full Card Catalog">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+        <span>Catalog Slabs</span>
+      </a>
+      <a href="trade.html" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-700 hover:text-sky-600 hover:bg-sky-50 transition-all" title="Peer to Peer Trade">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+        <span>P2P Trade</span>
+      </a>
+      <a href="collection.html" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-700 hover:text-amber-600 hover:bg-amber-50 transition-all" title="Your Saved Collection">
+        <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+        <span>Collection</span>
+        <span id="collectionNavBadge" class="hidden px-1.5 py-0.2 bg-amber-500 text-white text-[10px] font-black rounded-full">0</span>
+      </a>
+      <a href="upload.html" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-700 hover:text-emerald-600 hover:bg-emerald-50 transition-all" title="Upload Card">
+        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+        <span>Upload</span>
+      </a>
+    </nav>
+
+    <!-- Right: Cart & Sign In (NO Search bar here!) -->
+    <div class="flex items-center gap-2">
+      <!-- Cart Button -->
+      <button onclick="openCartDrawer()" class="relative p-2 bg-white/95 backdrop-blur-md text-slate-700 hover:text-sky-600 rounded-xl border border-white/80 shadow-md hover:scale-105 transition-all" title="View Cart">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+        <span id="cartBadgeCount" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-sky-600 text-white text-[10px] font-black rounded-full flex items-center justify-center">0</span>
+      </button>
+
+      <!-- Mobile Menu Button -->
+      <div class="relative md:hidden">
+        <button type="button" id="mobileNavMenuBtn" onclick="toggleMobileNavMenu(event)" class="p-2 text-slate-700 hover:text-sky-600 bg-white/95 backdrop-blur-md rounded-xl border border-white/80 shadow-md flex items-center justify-center">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div id="mobileNavDropdown" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-sky-100 p-2 z-50">
+          <a href="marketplace.html" class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-sky-50 hover:text-sky-600 rounded-xl">
+            <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            <span>Catalog Slabs</span>
+          </a>
+          <a href="trade.html" class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-sky-50 hover:text-sky-600 rounded-xl">
+            <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+            <span>Trade Wheel</span>
+          </a>
+          <a href="collection.html" class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-sky-50 hover:text-sky-600 rounded-xl">
+            <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+            <span>Collection</span>
+          </a>
+          <a href="upload.html" class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-sky-50 hover:text-sky-600 rounded-xl">
+            <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span>Upload Card</span>
           </a>
         </div>
-
-        <nav class="flex flex-col items-center gap-3 w-full">
-          <a href="index.html" class="sky-sidebar-item active w-11 h-11 flex items-center justify-center rounded-xl bg-sky-100 text-sky-600 hover:bg-sky-200 transition-colors shadow-sm" title="Home Dashboard">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-          </a>
-          <a href="marketplace.html" class="sky-sidebar-item w-11 h-11 flex items-center justify-center rounded-xl text-slate-500 hover:bg-sky-100 hover:text-sky-600 transition-colors" title="Marketplace Catalog">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-          </a>
-          <a href="trade.html" class="sky-sidebar-item w-11 h-11 flex items-center justify-center rounded-xl text-sky-600 hover:bg-sky-100 transition-colors" title="P2P Trade">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-          </a>
-          <a href="collection.html" class="sky-sidebar-item w-11 h-11 flex items-center justify-center rounded-xl text-amber-600 hover:bg-amber-100 transition-colors relative" title="Your Saved Collection">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
-            <span id="collectionNavBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-amber-500 text-white text-[10px] font-black rounded-full flex items-center justify-center">0</span>
-          </a>
-          <a href="upload.html" class="sky-sidebar-item w-11 h-11 flex items-center justify-center rounded-xl text-emerald-600 hover:bg-emerald-100 transition-colors" title="Mint / Upload Card">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-          </a>
-        </nav>
-
-      </div>
-    </aside>
-
-
-    <main class="flex-1 flex flex-col min-w-0">
-
-      <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-sky-100 px-4 sm:px-6 py-3 flex items-center justify-between gap-3 w-full col-span-full">
-        <!-- Logo at Left (only logo icon on mobile, no website title) -->
-        <a href="index.html" class="flex items-center flex-shrink-0 lg:hidden" title="CARDANGO">
-          <img src="https://i.pinimg.com/1200x/da/6f/2c/da6f2c6782704e4120fc689f5da89482.jpg" alt="CARDANGO Logo" class="w-8 h-8 rounded-full object-cover shadow-sm border border-sky-400" />
-        </a>
-
-        <!-- Search Bar -->
-        <div class="relative flex-1 w-full min-w-0">
-          <input type="text" id="cardSearchInput" placeholder="Search cards by title, category, edition..." class="w-full pl-9 pr-3 py-2 bg-slate-50 text-xs font-semibold text-slate-800 placeholder-slate-400 rounded-xl border border-sky-200 focus:outline-none focus:border-sky-500 focus:bg-white shadow-sm transition-all" />
-          <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        </div>
-
-        <!-- Right Side Group: Cart + Dropdown + Sign In Badge -->
-        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-          <button onclick="openCartDrawer()" class="relative p-2 bg-sky-50 text-slate-700 hover:text-sky-600 rounded-xl border border-sky-200 transition-colors shadow-sm" title="View Cart">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-            <span id="cartBadgeCount" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-sky-600 text-white text-[10px] font-black rounded-full flex items-center justify-center">0</span>
-          </button>
-
-          <!-- Dropdown at Right before Sign In -->
-          <div class="relative lg:hidden">
-            <button type="button" id="mobileNavMenuBtn" onclick="toggleMobileNavMenu(event)" class="p-2 text-slate-600 hover:text-sky-600 hover:bg-sky-50 rounded-xl transition-all border border-sky-200 bg-white shadow-sm flex items-center justify-center" title="Menu">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-            </button>
-            <div id="mobileNavDropdown" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-sky-100 p-2 z-50">
-              <a href="index.html" class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-sky-50 hover:text-sky-600 rounded-xl transition-colors">
-                <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                <span>Home Dashboard</span>
-              </a>
-              <a href="marketplace.html" class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-sky-50 hover:text-sky-600 rounded-xl transition-colors">
-                <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-                <span>Catalog Slabs</span>
-              </a>
-              <a href="trade.html" class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-sky-50 hover:text-sky-600 rounded-xl transition-colors">
-                <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-                <span>P2P Trade Wheel</span>
-              </a>
-              <a href="collection.html" class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-sky-50 hover:text-sky-600 rounded-xl transition-colors">
-                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
-                <span>Your Collection</span>
-              </a>
-              <a href="upload.html" class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-sky-50 hover:text-sky-600 rounded-xl transition-colors">
-                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                <span>Mint / Upload Card</span>
-              </a>
-            </div>
-          </div>
-
-          <!-- Sign In Badge at Right -->
-          <div id="authNavContainer" class="flex items-center"></div>
-        </div>
-      </header>
-
-      <div class="p-6 space-y-6">
-        
-        <div class="pb-2 border-b border-sky-100 flex items-center justify-between">
-          <div>
-            <h1 class="text-2xl font-black text-slate-900 tracking-tight">CARDANGO Dashboard</h1>
-            <p class="text-xs text-slate-500 mt-0.5">Explore collectibles and verified vault slabs</p>
-          </div>
-          <div class="text-xs font-bold text-sky-600 bg-sky-50 border border-sky-200 px-3 py-1 rounded-full">
-            Showing <span id="filteredCardsCount">10</span> cards
-          </div>
-        </div>
-
-        
-        <!-- Characters Banner -->
-        <div class="w-full rounded-2xl overflow-hidden shadow-md border border-sky-100 -mt-2">
-          <img src="assets/characters-banner.png" alt="CARDANGO Featured Universe" class="w-full object-cover" style="max-height:150px;object-position:center;" />
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
-          <div class="lg:col-span-8 xl:col-span-9 space-y-4">
-            
-            <div class="sky-card p-3.5 flex items-center justify-between text-xs text-slate-500 font-semibold bg-white rounded-2xl border border-sky-100 shadow-sm">
-              <span class="flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>Click any card slab to inspect overview & price</span>
-              </span>
-              <span class="text-[11px] text-slate-400 font-medium">Verified In Escrow</span>
-            </div>
-            <div id="marketplaceGrid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-4">
-              
-            </div>
-
-          </div>
-
-          <aside class="lg:col-span-4 xl:col-span-3 bg-white rounded-3xl border border-sky-200 p-5 shadow-sm space-y-5 sticky top-20">
-            
-            <div class="flex items-center justify-between pb-3 border-b border-sky-100">
-              <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
-                <h2 class="font-black text-sm text-slate-900 tracking-tight">Filter Slabs</h2>
-              </div>
-              <button onclick="resetAllFilters()" class="text-[11px] font-bold text-sky-600 hover:text-sky-800 hover:underline transition-colors flex items-center gap-1">
-                <span>Reset All</span>
-              </button>
-            </div>
-
-            <div class="space-y-2">
-              <label class="block text-[10px] font-black uppercase text-slate-400 tracking-wider">Category</label>
-              <div class="flex flex-wrap gap-1.5 text-xs font-bold">
-                <button data-category-filter="all" class="px-3 py-1.5 bg-sky-600 text-white rounded-xl shadow-sm transition-all">All Cards</button>
-                <button data-category-filter="dev" class="px-3 py-1.5 bg-slate-50 text-slate-700 hover:bg-sky-50 rounded-xl border border-slate-200 transition-all">Dev Cards</button>
-                <button data-category-filter="pokemon" class="px-3 py-1.5 bg-slate-50 text-slate-700 hover:bg-sky-50 rounded-xl border border-slate-200 transition-all">Pokémon</button>
-                <button data-category-filter="anime" class="px-3 py-1.5 bg-slate-50 text-slate-700 hover:bg-sky-50 rounded-xl border border-slate-200 transition-all">Anime</button>
-                <button data-category-filter="cricket" class="px-3 py-1.5 bg-slate-50 text-slate-700 hover:bg-sky-50 rounded-xl border border-slate-200 transition-all">Cricket</button>
-                <button data-category-filter="football" class="px-3 py-1.5 bg-slate-50 text-slate-700 hover:bg-sky-50 rounded-xl border border-slate-200 transition-all">football</button>
-              </div>
-            </div>
-
-            <div class="space-y-2.5 bg-slate-50/80 p-3.5 rounded-2xl border border-sky-100">
-              <div class="flex items-center justify-between">
-                <label class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Price (INR)</label>
-                <span id="priceSliderValue" class="text-xs font-black text-sky-700 bg-white px-2 py-0.5 rounded-lg border border-sky-200 shadow-xs">
-                  All Prices
-                </span>
-              </div>
-              
-              <div class="relative pt-1">
-                <input 
-                  type="range" 
-                  id="priceRangeSlider" 
-                  min="300" 
-                  max="5000" 
-                  step="50" 
-                  value="5000" 
-                  class="w-full cursor-pointer focus:outline-none" 
-                />
-                <div class="flex justify-between items-center text-[10px] font-bold text-slate-400 mt-1.5">
-                  <span>₹300</span>
-                  <span>₹1,500</span>
-                  <span>₹3,000</span>
-                  <span>₹5,000+</span>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-4 gap-1 pt-1 text-[10px] font-bold">
-                <button type="button" onclick="setPriceSliderPreset(500)" class="price-preset-btn px-1.5 py-1 bg-white hover:bg-sky-50 text-slate-700 rounded-lg border border-slate-200 text-center transition-all">
-                  &lt; ₹500
-                </button>
-                <button type="button" onclick="setPriceSliderPreset(1500)" class="price-preset-btn px-1.5 py-1 bg-white hover:bg-sky-50 text-slate-700 rounded-lg border border-slate-200 text-center transition-all">
-                  &lt; ₹1.5k
-                </button>
-                <button type="button" onclick="setPriceSliderPreset(3000)" class="price-preset-btn px-1.5 py-1 bg-white hover:bg-sky-50 text-slate-700 rounded-lg border border-slate-200 text-center transition-all">
-                  &lt; ₹3k
-                </button>
-                <button type="button" onclick="setPriceSliderPreset(5000)" class="price-preset-btn px-1.5 py-1 bg-sky-600 text-white rounded-lg shadow-sm text-center transition-all">
-                  All
-                </button>
-              </div>
-            </div>
-
-            <div class="space-y-2">
-              <label class="block text-[10px] font-black uppercase text-slate-400 tracking-wider">Crypto Value (ETH)</label>
-              <div class="grid grid-cols-2 gap-1.5 text-xs font-bold">
-                <button data-eth-filter="all" class="px-3 py-1.5 bg-sky-600 text-white rounded-xl shadow-sm transition-all text-center">Any ETH</button>
-                <button data-eth-filter="under0.25" class="px-3 py-1.5 bg-slate-50 text-slate-700 hover:bg-sky-50 rounded-xl border border-slate-200 transition-all text-center">&lt; 0.25 ETH</button>
-                <button data-eth-filter="0.25to0.75" class="px-3 py-1.5 bg-slate-50 text-slate-700 hover:bg-sky-50 rounded-xl border border-slate-200 transition-all text-center">0.25 - 0.75</button>
-                <button data-eth-filter="over0.75" class="px-3 py-1.5 bg-slate-50 text-slate-700 hover:bg-sky-50 rounded-xl border border-slate-200 transition-all text-center">&gt; 0.75 ETH</button>
-              </div>
-            </div>
-
-            <div class="space-y-2">
-              <label class="block text-[10px] font-black uppercase text-slate-400 tracking-wider">Rarity Tier</label>
-              <div class="flex flex-wrap gap-1.5 text-xs font-bold">
-                <button data-rarity-filter="all" class="px-3 py-1.5 bg-sky-600 text-white rounded-xl shadow-sm transition-all">All Rarities</button>
-                <button data-rarity-filter="mythic" class="px-3 py-1.5 bg-slate-50 text-slate-700 hover:bg-sky-50 rounded-xl border border-slate-200 transition-all">Mythic</button>
-                <button data-rarity-filter="secret" class="px-3 py-1.5 bg-slate-50 text-slate-700 hover:bg-sky-50 rounded-xl border border-slate-200 transition-all">Secret Rare</button>
-                <button data-rarity-filter="manga" class="px-3 py-1.5 bg-slate-50 text-slate-700 hover:bg-sky-50 rounded-xl border border-slate-200 transition-all">Manga</button>
-                <button data-rarity-filter="signed" class="px-3 py-1.5 bg-slate-50 text-slate-700 hover:bg-sky-50 rounded-xl border border-slate-200 transition-all">Signature</button>
-                <button data-rarity-filter="ultra" class="px-3 py-1.5 bg-slate-50 text-slate-700 hover:bg-sky-50 rounded-xl border border-slate-200 transition-all">Ultra Rare</button>
-              </div>
-            </div>
-
-            <div class="p-3 bg-sky-50 rounded-2xl border border-sky-100 flex items-center justify-between text-xs">
-              <span class="text-slate-600 font-semibold">Active Matches:</span>
-              <span id="filterSummaryCount" class="font-black text-sky-700 bg-white px-2.5 py-0.5 rounded-lg border border-sky-200">10 cards</span>
-            </div>
-
-            <div class="p-4 bg-gradient-to-br from-slate-900 to-sky-950 text-white rounded-2xl shadow-sm space-y-2.5">
-              <div class="flex items-center justify-between">
-                <span class="text-[11px] font-black uppercase tracking-wider text-sky-300">Got Rare Cards?</span>
-                <span class="text-[9px] font-bold bg-sky-500/30 text-sky-200 px-2 py-0.5 rounded border border-sky-400/30">Studio</span>
-              </div>
-              <p class="text-[11px] text-slate-300 leading-snug">List or upload your custom slab to the CARDANGO catalog.</p>
-              <a href="upload.html" class="flex items-center justify-center gap-2 py-2 px-3 bg-sky-500 hover:bg-sky-400 text-slate-950 rounded-xl text-xs font-black transition-all shadow-md">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                <span>Upload New Card</span>
-              </a>
-            </div>
-
-          </aside>
-
-        </div>
-
       </div>
 
-    </main>
+      <!-- User Auth State -->
+      <div id="authNavContainer" class="flex items-center"></div>
+    </div>
 
-  </div>
+  </header>
 
+  <!-- ==================== STATIC MAP CONTAINER (LOCKED IN PLACE) ==================== -->
+  <main class="flex-1 flex items-center justify-center p-2 sm:p-4 min-h-0 w-full overflow-hidden">
+    
+    <div id="mapStage">
+      <!-- The Island Base Image -->
+      <img
+        src="assets/cardango-world-map.jpg"
+        alt="CARDANGO Island World Map"
+        class="map-base-image"
+        draggable="false"
+      />
 
-  <footer class="naruto-large-footer">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-      
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-10 pb-16 border-b border-white/20">
-        
-        <div class="md:col-span-4 space-y-4">
-          <div class="flex items-center gap-3">
-            <img src="https://i.pinimg.com/736x/da/6f/2c/da6f2c6782704e4120fc689f5da89482.jpg" alt="CARDANGO Logo" class="w-10 h-10 rounded-full object-cover shadow-lg border border-amber-400" />
-            <span class="brand-logo-text">CARDANGO</span>
+      <!-- ═══════════════ 1. MONSTER SANCTUARY (POKÉMON) ═══════════════ -->
+      <div
+        id="pill-pokemon"
+        class="zone-hotspot"
+        style="left: 27.2%; top: 29.2%;"
+        onclick="handleZoneClick('pill-pokemon', 'Monster Sanctuary', '🌿', 'Pokémon Slabs', 'https://i.pinimg.com/736x/35/ca/32/35ca32abb63da8220873970a391d6876.jpg', 'Charizard 1st Edition', 'marketplace.html?category=pokemon')"
+        role="button"
+        tabindex="0"
+        aria-label="Monster Sanctuary"
+      >
+        <div class="relative group">
+          <span class="absolute -inset-1 rounded-full bg-emerald-400 opacity-75 pulse-beacon"></span>
+          <div class="relative flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 bg-white hover:bg-emerald-50 text-slate-900 border-2 border-emerald-500 rounded-full shadow-md font-extrabold text-[11px] sm:text-xs md:text-sm whitespace-nowrap">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Monster Sanctuary</span>
+            <svg class="w-3.5 h-3.5 text-emerald-600 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
           </div>
-
-          <p class="brand-tagline">
-            Building digital trading card experiences that inspire, connect, and preserve lasting value.
-          </p>
-
-          <div class="flex items-center gap-2 pt-1">
-            <a href="#" class="w-7 h-7 rounded-lg border border-white/20 bg-white/5 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-all" title="Instagram">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-            </a>
-            <a href="#" class="w-7 h-7 rounded-lg border border-white/20 bg-white/5 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-all" title="X (Twitter)">
-              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-            </a>
-            <a href="#" class="w-7 h-7 rounded-lg border border-white/20 bg-white/5 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-all" title="LinkedIn">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect width="4" height="12" x="2" y="9"></rect><circle cx="4" cy="4" r="2"></circle></svg>
-            </a>
-            <a href="#" class="w-7 h-7 rounded-lg border border-white/20 bg-white/5 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-all" title="YouTube">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
-            </a>
-          </div>
         </div>
-
-        <div class="md:col-span-2 space-y-3">
-          <div class="footer-heading">SHOP</div>
-          <ul class="space-y-2 text-xs">
-            <li><a href="marketplace.html">All Collections</a></li>
-            <li><a href="marketplace.html">Dev Cards</a></li>
-            <li><a href="marketplace.html">Pokémon Cards</a></li>
-            <li><a href="marketplace.html">Anime Cards</a></li>
-            <li><a href="marketplace.html">Cricket Cards</a></li>
-            <li><a href="upload.html" class="text-sky-300 font-bold hover:underline">Upload Card</a></li>
-          </ul>
-        </div>
-        
-        <div class="md:col-span-3 space-y-3">
-          <div class="footer-heading">ABOUT US</div>
-          <ul class="space-y-2 text-xs">
-            <li><a href="contact.html">Our Story & Craftsmanship</a></li>
-            <li><a href="trade.html">Authenticity Guarantee</a></li>
-            <li><a href="trade.html">CARDANGO Escrow Protection</a></li>
-          </ul>
-        </div>
-
-        <div class="md:col-span-3 space-y-3">
-          <div class="footer-heading">HELP & SUPPORT</div>
-          <ul class="space-y-2 text-xs">
-            <li><a href="contact.html">FAQs & Support Desk</a></li>
-            <li><a href="contact.html">Free Card Appraisal</a></li>
-            <li><a href="trade.html">Track Vault Escrow</a></li>
-          </ul>
-        </div>
-
       </div>
 
-      <div class="pt-8 flex flex-col md:flex-row items-center justify-between text-xs text-white/80 font-medium gap-3">
-        <div>© 2026 CARDANGO. All rights reserved.</div>
-        <div class="flex items-center gap-4">
-          <a href="#">Privacy Policy</a>
-          <span>•</span>
-          <a href="#">Terms of Service</a>
-          <span>•</span>
-          <a href="#">Cookie Policy</a>
+      <!-- ═══════════════ 2. ANIME ARENA (ANIME) ═══════════════ -->
+      <div
+        id="pill-anime"
+        class="zone-hotspot"
+        style="left: 74.8%; top: 31.2%;"
+        onclick="handleZoneClick('pill-anime', 'Anime Arena', '⛩️', 'Anime & Manga Gems', 'https://i.pinimg.com/1200x/8a/6f/20/8a6f2091122f67b8813a9849b742b60a.jpg', 'Luffy Gear 5 Manga Secret', 'marketplace.html?category=anime')"
+        role="button"
+        tabindex="0"
+        aria-label="Anime Arena"
+      >
+        <div class="relative group">
+          <span class="absolute -inset-1 rounded-full bg-purple-400 opacity-75 pulse-beacon"></span>
+          <div class="relative flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 bg-white hover:bg-purple-50 text-slate-900 border-2 border-purple-500 rounded-full shadow-md font-extrabold text-[11px] sm:text-xs md:text-sm whitespace-nowrap">
+            <span class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
+            <span>Anime Arena</span>
+            <svg class="w-3.5 h-3.5 text-purple-600 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+          </div>
         </div>
-        <div class="text-white/90 font-medium">Made with 🤍 by CARDANGO</div>
+      </div>
+
+      <!-- ═══════════════ 3. SPORTS HUB (CRICKET & FOOTBALL) ═══════════════ -->
+      <div
+        id="pill-sports"
+        class="zone-hotspot"
+        style="left: 50.0%; top: 55.4%;"
+        onclick="handleZoneClick('pill-sports', 'Sports Hub', '🏟️', 'Cricket & Football Matchday', 'https://i.pinimg.com/736x/da/6f/2c/da6f2c6782704e4120fc689f5da89482.jpg', 'Lionel Messi World Cup Gold', 'marketplace.html?category=sports')"
+        role="button"
+        tabindex="0"
+        aria-label="Sports Hub"
+      >
+        <div class="relative group">
+          <span class="absolute -inset-1 rounded-full bg-sky-400 opacity-75 pulse-beacon"></span>
+          <div class="relative flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 bg-white hover:bg-sky-50 text-slate-900 border-2 border-sky-500 rounded-full shadow-md font-extrabold text-[11px] sm:text-xs md:text-sm whitespace-nowrap">
+            <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+            <span>Sports Hub</span>
+            <svg class="w-3.5 h-3.5 text-sky-600 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════ 4. SUPERCAR DISTRICT (SUPERCARS) ═══════════════ -->
+      <div
+        id="pill-supercars"
+        class="zone-hotspot"
+        style="left: 25.4%; top: 75.2%;"
+        onclick="handleZoneClick('pill-supercars', 'Supercar District', '🏎️', 'Hypercars & Speed', 'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?w=800&auto=format&fit=crop&q=80', 'Porsche 911 GT3 RS #992', 'marketplace.html?category=supercars')"
+        role="button"
+        tabindex="0"
+        aria-label="Supercar District"
+      >
+        <div class="relative group">
+          <span class="absolute -inset-1 rounded-full bg-rose-400 opacity-75 pulse-beacon"></span>
+          <div class="relative flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 bg-white hover:bg-rose-50 text-slate-900 border-2 border-rose-500 rounded-full shadow-md font-extrabold text-[11px] sm:text-xs md:text-sm whitespace-nowrap">
+            <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+            <span>Supercar District</span>
+            <svg class="w-3.5 h-3.5 text-rose-600 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════ 5. MYSTERY PORTAL (DEV / SECRET VAULT) ═══════════════ -->
+      <div
+        id="pill-mystery"
+        class="zone-hotspot"
+        style="left: 77.2%; top: 72.5%;"
+        onclick="handleZoneClick('pill-mystery', 'Mystery Portal', '🔮', 'Dev Realm & Secret Vault', 'https://i.pinimg.com/1200x/52/c9/06/52c9067bd5e9c4188f8241857fca1597.jpg', 'Rust Kernel Hacker #08', 'marketplace.html?category=dev')"
+        role="button"
+        tabindex="0"
+        aria-label="Mystery Portal"
+      >
+        <div class="relative group">
+          <span class="absolute -inset-1 rounded-full bg-violet-400 opacity-75 pulse-beacon"></span>
+          <div class="relative flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 bg-white hover:bg-violet-50 text-slate-900 border-2 border-violet-500 rounded-full shadow-md font-extrabold text-[11px] sm:text-xs md:text-sm whitespace-nowrap">
+            <span class="w-2 h-2 rounded-full bg-violet-500 animate-pulse"></span>
+            <span>Mystery Portal</span>
+            <svg class="w-3.5 h-3.5 text-violet-600 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+          </div>
+        </div>
       </div>
 
     </div>
-  </footer>
 
+  </main>
+
+  <!-- Empty bottom spacer for perfect vertical balance -->
+  <div class="h-4 sm:h-6 flex-shrink-0"></div>
+
+  <!-- ==================== SUBTLE CARD SLIDE TOAST (On Click) ==================== -->
+  <div id="cardSlideToast" class="polecat-glass rounded-2xl p-2.5 sm:p-3 shadow-2xl border border-white/90 flex items-center gap-3">
+    <!-- Mini Card Art Thumbnail -->
+    <div class="relative w-11 h-14 rounded-lg overflow-hidden bg-slate-900 shadow-sm flex-shrink-0 border border-slate-200">
+      <img id="toastCardImg" src="" alt="Card Thumbnail" class="w-full h-full object-cover" />
+      <div class="scanline-effect"></div>
+    </div>
+
+    <!-- Text info -->
+    <div class="pr-2 leading-tight">
+      <div class="flex items-center gap-1.5">
+        <span id="toastIcon" class="text-sm">⛩️</span>
+        <span id="toastZoneTitle" class="text-xs font-black text-slate-900 tracking-tight">Anime Arena</span>
+      </div>
+      <div id="toastCardName" class="text-[10px] font-bold text-slate-500 truncate max-w-[140px] mt-0.5">Monkey D. Luffy</div>
+      <div class="text-[9px] font-extrabold uppercase tracking-wider text-sky-600 mt-1 flex items-center gap-1">
+        <span class="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse"></span>
+        <span>Entering Catalog...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== CART DRAWER MODAL ==================== -->
   <div id="cartDrawerModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm items-center justify-end">
     <div class="w-full max-w-sm bg-white h-full shadow-2xl flex flex-col justify-between p-4 border-l border-sky-200">
       <div>
         <div class="flex items-center justify-between pb-3 border-b border-slate-100">
           <h3 class="text-sm font-bold text-slate-900">Your CARDANGO Cart</h3>
-          <button onclick="closeCartDrawer()" class="text-slate-400 hover:text-slate-900">✕</button>
+          <button onclick="closeCartDrawer()" class="text-slate-400 hover:text-slate-900 text-lg">✕</button>
         </div>
         <div id="cartDrawerItems" class="space-y-2 mt-3 max-h-[65vh] overflow-y-auto"></div>
       </div>
@@ -364,33 +394,44 @@
     </div>
   </div>
 
-  <div id="tradeModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm items-center justify-center p-4">
-    <div class="w-full max-w-md bg-white rounded-2xl p-5 shadow-2xl space-y-4 border border-sky-100">
-      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-        <h3 class="text-sm font-bold text-slate-900">CARDANGO Peer Trade</h3>
-        <button onclick="closeTradeModal()" class="text-slate-400 hover:text-slate-900">✕</button>
-      </div>
-      <div class="flex items-center gap-3 bg-sky-50 p-3 rounded-xl border border-sky-100">
-        <img id="tradeTargetImage" src="" class="w-12 h-12 rounded-lg object-cover" />
-        <div>
-          <div class="text-[10px] text-sky-600 font-bold">TARGET CARD</div>
-          <div id="tradeTargetTitle" class="text-xs font-bold text-slate-900">Card Name</div>
-        </div>
-      </div>
-      <div class="space-y-2">
-        <label class="block text-[10px] font-bold text-slate-600 uppercase">Select Card to Swap:</label>
-        <select class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800">
-          <option>Senior Full-Stack Architect #01</option>
-          <option>Rust Kernel Hacker #08</option>
-        </select>
-      </div>
-      <div class="flex gap-2 pt-2">
-        <button onclick="closeTradeModal()" class="flex-1 py-2 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl">Cancel</button>
-        <button onclick="submitTradeOffer()" class="flex-1 py-2 bg-sky-600 text-white text-xs font-bold rounded-xl">Send Proposal</button>
-      </div>
-    </div>
-  </div>
-
+  <!-- Main Cardango Logic (Auth, Cart, Sync, Store) -->
   <script src="app.js"></script>
+
+  <!-- ==================== SUBTLE GLITCH & SLIDE SCRIPT ==================== -->
+  <script>
+    /**
+     * Subtle cyber glitch on clicked pill + smooth card slide toast
+     * Quick & snappy ~360ms transition to category catalog
+     */
+
+    function handleZoneClick(pillId, zoneName, icon, subtext, cardImg, cardTitle, destinationUrl) {
+      const pill = document.getElementById(pillId);
+      if (pill) {
+        pill.classList.add('glitch-active');
+      }
+
+      // Show subtle slide toast in bottom-right corner
+      const toast = document.getElementById('cardSlideToast');
+      const imgEl = document.getElementById('toastCardImg');
+      const zoneEl = document.getElementById('toastZoneTitle');
+      const iconEl = document.getElementById('toastIcon');
+      const nameEl = document.getElementById('toastCardName');
+
+      if (imgEl) imgEl.src = cardImg;
+      if (zoneEl) zoneEl.textContent = zoneName;
+      if (iconEl) iconEl.textContent = icon;
+      if (nameEl) nameEl.textContent = cardTitle;
+
+      if (toast) {
+        toast.classList.add('active');
+      }
+
+      // Snappy subtle slide transition before navigating
+      setTimeout(() => {
+        window.location.href = destinationUrl;
+      }, 380);
+    }
+  </script>
+
 </body>
 </html>
